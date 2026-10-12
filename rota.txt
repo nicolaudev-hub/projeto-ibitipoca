@@ -1,0 +1,4 @@
+Portaria do Parque;-21.7;-43.92;900.0
+Circuito Janela do Céu;-21.71;-43.91;1100.0
+Lombada;-21.715;-43.905;1300.0
+Janela do Céu;-21.72;-43.9;1500.0

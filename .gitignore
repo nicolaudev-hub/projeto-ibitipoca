@@ -1,1 +1,12 @@
+﻿# IntelliJ IDEA
+/.idea/
+/shelf/
+/workspace.xml
+*.iml
+
+# Maven
+/target/
+
+# Java compilado
+/out/
 *.class
