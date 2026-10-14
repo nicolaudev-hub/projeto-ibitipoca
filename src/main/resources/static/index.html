@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Projeto Ibitipoca - Navegação Offline</title>
+
+    <link rel="stylesheet" href="./leaflet/leaflet.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        header {
+            padding: 20px;
+            background-color: #173b2b;
+            color: white;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 24px;
+        }
+
+        header p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .painel-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .cartao {
+            flex: 1;
+            min-width: 150px;
+            padding: 16px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .cartao h2 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .cartao p {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #mapa {
+            width: 100%;
+            height: 500px;
+            background-color: #e5e7eb;
+            border-radius: 10px;
+            border: 1px solid #d1d5db;
+            z-index: 1;
+        }
+
+        #status {
+            margin-top: 14px;
+            padding: 14px;
+            background-color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .observacao {
+            margin-top: 12px;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 600px) {
+            main {
+                padding: 12px;
+            }
+
+            header h1 {
+                font-size: 20px;
+            }
+
+            #mapa {
+                height: 400px;
+            }
+
+            .cartao {
+                min-width: 130px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>Projeto Ibitipoca</h1>
+    <p>Sistema de navegação offline</p>
+</header>
+
+<main>
+    <section class="painel-status">
+        <div class="cartao">
+            <h2>Conexão</h2>
+            <p id="conexao">Verificando...</p>
+        </div>
+
+        <div class="cartao">
+            <h2>Distância da rota</h2>
+            <p id="distancia">Calculando...</p>
+        </div>
+
+        <div class="cartao">
+            <h2>GPS</h2>
+            <p id="gps">Não iniciado</p>
+        </div>
+    </section>
+
+    <section>
+        <div id="mapa"></div>
+        <div id="status">Inicializando o mapa...</div>
+
+        <p class="observacao">
+            A linha azul representa o trajeto armazenado no arquivo local.
+            O mapa de fundo offline e o acompanhamento da posição GPS
+            serão implementados nas próximas etapas.
+        </p>
+    </section>
+</main>
+
+<script src="./leaflet/leaflet.js"></script>
+
+<script>
+    const mapa = L.map('mapa').setView(
+        [-21.764227, -43.350427],
+        10
+    );
+
+    const status = document.getElementById('status');
+    const conexao = document.getElementById('conexao');
+    const distancia = document.getElementById('distancia');
+
+    function atualizarConexao() {
+        conexao.textContent = navigator.onLine
+            ? 'Com conexão'
+            : 'Sem conexão';
+    }
+
+    atualizarConexao();
+
+    window.addEventListener('online', atualizarConexao);
+    window.addEventListener('offline', atualizarConexao);
+
+    fetch('./data/rota_navegacao_offline.json')
+        .then(resposta => {
+            if (!resposta.ok) {
+                throw new Error(
+                    'Não foi possível carregar o arquivo da rota.'
+                );
+            }
+
+            return resposta.json();
+        })
+        .then(dados => {
+            if (dados.code !== 'Ok' || !dados.routes?.length) {
+                throw new Error(
+                    'O arquivo não contém uma rota válida.'
+                );
+            }
+
+            const rota = dados.routes[0];
+
+            if (!rota.geometry?.coordinates?.length) {
+                throw new Error(
+                    'A rota não possui coordenadas para desenhar.'
+                );
+            }
+
+            // O OSRM fornece [longitude, latitude].
+            // O Leaflet utiliza [latitude, longitude].
+            const coordenadas = rota.geometry.coordinates.map(
+                ([longitude, latitude]) => [latitude, longitude]
+            );
+
+            const linhaRota = L.polyline(coordenadas, {
+                color: '#1769ff',
+                weight: 5,
+                opacity: 0.9
+            }).addTo(mapa);
+
+            L.marker(coordenadas[0])
+                .addTo(mapa)
+                .bindPopup('Início da rota');
+
+            L.marker(coordenadas[coordenadas.length - 1])
+                .addTo(mapa)
+                .bindPopup('Fim da rota');
+
+            mapa.fitBounds(linhaRota.getBounds(), {
+                padding: [20, 20]
+            });
+
+            distancia.textContent =
+                (rota.distance / 1000)
+                    .toFixed(2)
+                    .replace('.', ',') + ' km';
+
+            const duracaoMinutos = Math.round(rota.duration / 60);
+            const horas = Math.floor(duracaoMinutos / 60);
+            const minutos = duracaoMinutos % 60;
+
+            status.textContent =
+                'Rota carregada com sucesso. Distância: ' +
+                distancia.textContent +
+                '. Tempo estimado pelo OSRM: ' +
+                horas + ' h ' + minutos + ' min.';
+
+            console.log('Rota carregada:', rota);
+            console.log('Quantidade de coordenadas:', coordenadas.length);
+        })
+        .catch(erro => {
+            console.error('Erro ao carregar a rota:', erro);
+
+            status.textContent =
+                'Erro ao carregar a rota: ' + erro.message +
+                ' Se o HTML foi aberto diretamente como arquivo, ' +
+                'será necessário executar a aplicação em localhost.';
+        });
+</script>
+</body>
+</html>
