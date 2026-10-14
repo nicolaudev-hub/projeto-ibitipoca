@@ -52,7 +52,7 @@ public class TesteOffline {
                 if (distancia > 100) {
                     saltosSuspeitos++;
                     System.out.println(
-                            "Exibição dos pontos" + anterior.getNome() + atual.getNome() + distancia());
+                            "Exibição dos pontos: " + anterior.getNome() + " -> " + atual.getNome() + " | Distância: " + distancia + " metros");
                 }
             }
 
