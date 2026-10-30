@@ -1,0 +1,7 @@
+FROM maptiler/tileserver-gl:v5.6.0
+
+ENV TILESERVER_GL_ALLOWED_HOSTS=localhost
+
+# No Railway, monte um volume em /data e envie o MBTiles para este caminho.
+# Configure PORT=8080 no serviço; a imagem escuta na porta padrão 8080.
+CMD ["--file", "/data/mapa-ibitipoca.mbtiles"]

@@ -22,4 +22,20 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>**/*.bak</exclude>
+                    <exclude>**/*.bak.*</exclude>
+                    <exclude>**/*.backup-*</exclude>
+                    <exclude>**/rota_teste*.json</exclude>
+                    <exclude>**/index-antes-vectorgrid.html</exclude>
+                    <exclude>**/Leaflet.VectorGrid.bundled.js</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
+
 </project>
