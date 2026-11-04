@@ -3,44 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeto Ibitipoca - Navegação</title>
 
-    <title>Projeto Ibitipoca - Navegação Offline</title>
+    <!-- Evita o pedido automático (e o 404) de /favicon.ico -->
+    <link rel="icon" href="data:,">
 
     <link rel="stylesheet" href="./leaflet/leaflet.css">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f3f4f6;
+            background: #f3f4f6;
             color: #1f2937;
         }
 
         header {
             padding: 20px;
-            background-color: #173b2b;
+            background: #173b2b;
             color: white;
             text-align: center;
         }
 
-        header h1 {
-            margin: 0 0 8px;
-            font-size: 24px;
-        }
-
-        header p {
-            margin: 0;
-            font-size: 14px;
-        }
+        header h1 { margin: 0 0 8px; font-size: 24px; }
+        header p { margin: 0; font-size: 14px; }
 
         main {
             width: 100%;
             max-width: 1100px;
-            margin: 0 auto;
+            margin: auto;
             padding: 20px;
         }
 
@@ -55,9 +48,9 @@
             flex: 1;
             min-width: 150px;
             padding: 16px;
-            background-color: white;
+            background: white;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 8px #00000014;
         }
 
         .cartao h2 {
@@ -66,25 +59,38 @@
             color: #6b7280;
         }
 
-        .cartao p {
-            margin: 0;
-            font-size: 18px;
-            font-weight: bold;
+        .cartao p { margin: 0; font-size: 18px; font-weight: bold; }
+
+        .cartao.alerta {
+            background: #fde2e1;
+            outline: 3px solid #c92a2a;
+        }
+
+        .cartao.alerta p { color: #a61e1e; }
+
+        .botao-centralizar {
+            padding: 8px 12px;
+            font: bold 14px Arial, sans-serif;
+            color: #173b2b;
+            background: white;
+            border: 2px solid #00000033;
+            border-radius: 6px;
+            cursor: pointer;
         }
 
         #mapa {
             width: 100%;
             height: 500px;
-            background-color: #e5e7eb;
-            border-radius: 10px;
+            background: #e5e7eb;
             border: 1px solid #d1d5db;
+            border-radius: 10px;
             z-index: 1;
         }
 
         #status {
             margin-top: 14px;
             padding: 14px;
-            background-color: white;
+            background: white;
             border-radius: 8px;
             font-size: 14px;
             line-height: 1.5;
@@ -98,22 +104,125 @@
             line-height: 1.5;
         }
 
+        .painel-offline {
+            margin-top: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000014;
+        }
+
+        .painel-offline h2 { margin: 0 0 8px; font-size: 16px; }
+        .painel-offline p { margin: 0 0 8px; }
+        #offline-estado { font-weight: bold; }
+        #offline-estado.completo { color: #087f5b; }
+        #offline-estado.problema { color: #a61e1e; }
+
+        #offline-progresso { width: 100%; height: 14px; }
+
+        .botoes-offline { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+        .botoes-offline button {
+            padding: 10px 14px;
+            font: bold 14px Arial, sans-serif;
+            border-radius: 6px;
+            border: 2px solid #173b2b;
+            cursor: pointer;
+        }
+
+        #offline-baixar { color: white; background: #173b2b; }
+        #offline-baixar:disabled { opacity: 0.6; cursor: default; }
+        #offline-cancelar { color: #173b2b; background: white; }
+
+        .painel-instrucoes {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            padding: 12px;
+            background: #173b2b;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .painel-instrucoes.parque { background: #8a3a0b; }
+        .painel-instrucoes.alerta { outline: 3px solid #ffd43b; }
+
+        .instr-icone {
+            flex: 0 0 52px;
+            height: 52px;
+            font-size: 36px;
+            line-height: 52px;
+            text-align: center;
+            background: #ffffff26;
+            border-radius: 8px;
+        }
+
+        .instr-corpo { flex: 1; min-width: 0; }
+        .instr-corpo p { margin: 0; }
+        .instr-destino { font-size: 12px; opacity: 0.85; }
+        .instr-texto { font-size: 18px; font-weight: bold; line-height: 1.3; }
+        .instr-detalhe { margin-top: 4px !important; font-size: 14px; }
+        .instr-detalhe span + span::before { content: " · "; }
+        .instr-seguinte, .instr-aviso { margin-top: 4px !important; font-size: 13px; opacity: 0.9; }
+        .instr-aviso:empty, .instr-seguinte:empty { display: none; }
+
+        .visualmente-oculto {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+        }
+
+        .painel-parque {
+            margin-top: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000014;
+        }
+
+        .painel-parque fieldset { margin: 0; padding: 0; border: 0; }
+        .painel-parque legend { padding: 0; font-size: 16px; font-weight: bold; }
+        .painel-parque p { margin: 8px 0 0; }
+        .opcoes-parque { display: flex; gap: 10px; margin-top: 10px; }
+
+        .opcoes-parque label {
+            flex: 1;
+            padding: 10px 14px;
+            font: bold 15px Arial, sans-serif;
+            text-align: center;
+            border: 2px solid #8a3a0b;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .opcoes-parque input { margin: 0 6px 0 0; }
+        #parque-estado, #circuito-estado { font-weight: bold; }
+        #parque-estado.problema, #circuito-estado.problema { color: #a61e1e; }
+        .painel-circuito .opcoes-parque label { border-color: #0b7285; }
+
+        #parque-calcular {
+            margin-top: 10px;
+            padding: 10px 14px;
+            font: bold 14px Arial, sans-serif;
+            color: white;
+            background: #8a3a0b;
+            border: 2px solid #8a3a0b;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        #parque-calcular:disabled { opacity: 0.6; cursor: default; }
+
         @media (max-width: 600px) {
-            main {
-                padding: 12px;
-            }
-
-            header h1 {
-                font-size: 20px;
-            }
-
-            #mapa {
-                height: 400px;
-            }
-
-            .cartao {
-                min-width: 130px;
-            }
+            main { padding: 12px; }
+            header h1 { font-size: 20px; }
+            #mapa { height: 400px; }
+            .cartao { min-width: 130px; }
+            .instr-texto { font-size: 16px; }
         }
     </style>
 </head>
@@ -121,73 +230,516 @@
 <body>
 <header>
     <h1>Projeto Ibitipoca</h1>
-    <p>Sistema de navegação offline</p>
+    <p>Rota e mapa servidos pela própria aplicação</p>
 </header>
 
 <main>
     <section class="painel-status">
         <div class="cartao">
-            <h2>Conexão</h2>
+            <h2>Conexão de rede</h2>
             <p id="conexao">Verificando...</p>
         </div>
-
         <div class="cartao">
-            <h2>Distância da rota</h2>
+            <h2>Extensão da rota</h2>
             <p id="distancia">Calculando...</p>
         </div>
-
-        <div class="cartao">
+        <div class="cartao" id="cartao-gps">
             <h2>GPS</h2>
             <p id="gps">Não iniciado</p>
         </div>
     </section>
 
+    <section id="painel-instrucoes" class="painel-instrucoes" aria-labelledby="instr-destino">
+        <div id="instr-icone" class="instr-icone" aria-hidden="true">…</div>
+        <div class="instr-corpo">
+            <p id="instr-destino" class="instr-destino">Instruções até o chalé</p>
+            <p id="instr-texto" class="instr-texto">Carregando instruções...</p>
+            <p class="instr-detalhe">
+                <span id="instr-distancia"></span><span id="instr-restante"></span>
+            </p>
+            <p id="instr-seguinte" class="instr-seguinte"></p>
+            <p id="instr-aviso" class="instr-aviso"></p>
+        </div>
+        <p id="instr-anuncio" class="visualmente-oculto" aria-live="polite"></p>
+    </section>
+
     <section>
         <div id="mapa"></div>
         <div id="status">Inicializando o mapa...</div>
-
         <p class="observacao">
-            A linha azul representa o trajeto armazenado no arquivo local.
-            O mapa de fundo offline e o acompanhamento da posição GPS
-            serão implementados nas próximas etapas.
+            A rota azul e o mapa de fundo (até o zoom 12 dos dados) são servidos pela
+            aplicação; fora da área coberta o mapa fica sem fundo.
+            O mapa acompanha sua posição; arraste para explorar e toque em
+            "Centralizar" para voltar a seguir. O GPS exige HTTPS no celular.
         </p>
+    </section>
+
+    <section class="painel-parque">
+        <fieldset>
+            <legend>Deseja adicionar a rota até o parque?</legend>
+            <div class="opcoes-parque">
+                <label><input type="radio" name="rota-parque" value="nao" checked> Não</label>
+                <label><input type="radio" name="rota-parque" value="sim"> Sim</label>
+            </div>
+        </fieldset>
+        <p id="parque-estado" aria-live="polite"></p>
+        <p id="parque-detalhe" class="observacao"></p>
+        <button id="parque-calcular" type="button" hidden>Calcular a partir da posição atual</button>
+        <p class="observacao">
+            Destino: portaria de visitantes do Parque Estadual do Ibitipoca
+            (Conceição de Ibitipoca). A rota aparece em laranja tracejado.
+            O cálculo exige internet; a última rota calculada fica salva neste
+            aparelho e pode ser exibida sem internet, mas não é recalculada offline.
+        </p>
+    </section>
+
+    <section class="painel-parque painel-circuito">
+        <fieldset>
+            <legend>Deseja adicionar o Circuito das Águas?</legend>
+            <div class="opcoes-parque">
+                <label><input type="radio" name="circuito-aguas" value="nao" checked> Não</label>
+                <label><input type="radio" name="circuito-aguas" value="sim"> Sim</label>
+            </div>
+        </fieldset>
+        <p id="circuito-estado" aria-live="polite"></p>
+        <p class="observacao">
+            Trilha dentro do parque, com início e fim na portaria. O circuito
+            aparece em azul-petróleo e as atrações em azul; toque numa atração
+            para ver o nome. O traçado foi montado com as trilhas do
+            OpenStreetMap e não é o mapa oficial do parque: siga a sinalização
+            local. Funciona sem internet depois da primeira visita.
+        </p>
+    </section>
+
+    <section class="painel-offline" aria-labelledby="titulo-offline">
+        <h2 id="titulo-offline">Mapa offline</h2>
+        <p id="offline-estado" aria-live="polite">Verificando...</p>
+        <progress id="offline-progresso" max="100" value="0" hidden></progress>
+        <p id="offline-detalhe" class="observacao"></p>
+        <div class="botoes-offline">
+            <button id="offline-baixar" type="button" disabled>Baixar mapa offline</button>
+            <button id="offline-cancelar" type="button" hidden>Cancelar</button>
+        </div>
     </section>
 </main>
 
 <script src="./leaflet/leaflet.js"></script>
-
+<script src="./js/navegacao.js"></script>
+<script src="./js/instrucoes.js"></script>
+<script src="./js/rota-parque.js"></script>
+<script src="./js/circuito-aguas.js"></script>
+<script src="./js/registro-sw.js"></script>
+<script src="./js/download-mapa.js"></script>
 <script>
+    const status = document.getElementById('status');
+    const conexao = document.getElementById('conexao');
+    const distancia = document.getElementById('distancia');
+    let mensagemRota = '';
+    let mensagemMapa = '';
+    let mensagemOffline = '';
+
+    function atualizarStatus() {
+        status.textContent = [mensagemRota, mensagemMapa, mensagemOffline]
+            .filter(Boolean).join(' ');
+    }
+
+    // Registrado após o carregamento para não competir com a rota e os tiles.
+    window.addEventListener('load', () => {
+        window.RegistroSW.registrar(resultado => {
+            mensagemOffline = resultado.mensagem;
+            atualizarStatus();
+        });
+    });
+
     const mapa = L.map('mapa').setView(
         [-21.764227, -43.350427],
         10
     );
-    L.tileLayer('http://localhost:8081/styles/basic-preview/{z}/{x}/{y}.png', {
-        minZoom: 0,
-        maxZoom: 14,
-        attribution: '&copy; OpenStreetMap contributors &copy; OpenMapTiles'
-    }).addTo(mapa);
 
-    L.Icon.Default.mergeOptions({
-        imagePath: '/leaflet/images/',
-        iconUrl: 'marker-icon.png',
-        iconRetinaUrl: 'marker-icon.png',
-        shadowUrl: 'marker-shadow.png'
+    // Ícone dos marcadores de início e fim da rota.
+    // Usa L.icon com URLs completas e relativas, sem passar por
+    // L.Icon.Default (que concatena o imagePath e duplicava o caminho).
+    const iconeMarcador = L.icon({
+        iconUrl:       './leaflet/images/marker-icon.png',
+        shadowUrl:     './leaflet/images/marker-shadow.png',
+        iconSize:      [25, 41],
+        iconAnchor:    [12, 41],
+        popupAnchor:   [1, -34],
+        shadowSize:    [41, 41]
     });
 
-    const status = document.getElementById('status');
-    const conexao = document.getElementById('conexao');
-    const distancia = document.getElementById('distancia');
+
+    let tilesCarregados = false;
+    let falhasTiles = 0;
+    let versaoTiles = '';
 
     function atualizarConexao() {
         conexao.textContent = navigator.onLine
-            ? 'Com conexão'
-            : 'Sem conexão';
+            ? 'Rede disponível'
+            : 'Sem conexão de rede';
     }
 
-    atualizarConexao();
+    function atualizarEstadoMapa() {
+        if (falhasTiles > 0) {
+            mensagemMapa = 'Não foi possível carregar ' + falhasTiles +
+                ' tile(s) do mapa de fundo.';
+        } else if (tilesCarregados) {
+            mensagemMapa = 'Mapa de fundo local carregado (versão ' +
+                versaoTiles + ').';
+        }
+        atualizarStatus();
+    }
 
+    // Tiles PNG gerados por scripts/gerar-tiles.mjs e servidos pela aplicação.
+    fetch('./tiles/manifesto.json')
+        .then(resposta => {
+            if (!resposta.ok) throw new Error('Manifesto dos tiles indisponível.');
+            return resposta.json();
+        })
+        .then(manifesto => {
+            const [oeste, sul, leste, norte] = manifesto.limites;
+            const cobertura = L.latLngBounds([sul, oeste], [norte, leste]);
+            versaoTiles = manifesto.versao;
+
+            // Um tile de 512 px no zoom z equivale ao zoom z + 1 do Leaflet.
+            const camadaMapa = L.tileLayer('./tiles/{z}/{x}/{y}.png', {
+                tileSize: manifesto.tamanhoTile,
+                zoomOffset: -1,
+                minZoom: 1,
+                // Acima do zoom nativo o Leaflet amplia os tiles existentes.
+                maxZoom: 17,
+                maxNativeZoom: manifesto.zoomMax + 1,
+                // Não pede tiles fora da área gerada.
+                bounds: cobertura,
+                attribution: manifesto.atribuicao
+            });
+            camadaMapa.on('tileload', () => {
+                tilesCarregados = true;
+                atualizarEstadoMapa();
+            });
+            camadaMapa.on('tileerror', () => {
+                falhasTiles++;
+                atualizarEstadoMapa();
+            });
+            camadaMapa.addTo(mapa);
+        })
+        .catch(erro => {
+            console.error('Erro ao preparar o mapa de fundo:', erro);
+            mensagemMapa = erro.message ||
+                'Não foi possível carregar o mapa de fundo.';
+            atualizarStatus();
+        });
+
+    // ---- Download do mapa para uso offline ----
+    const offlineEstado = document.getElementById('offline-estado');
+    const offlineProgresso = document.getElementById('offline-progresso');
+    const offlineDetalhe = document.getElementById('offline-detalhe');
+    const botaoBaixar = document.getElementById('offline-baixar');
+    const botaoCancelar = document.getElementById('offline-cancelar');
+
+    function formatarMB(bytes) {
+        return (bytes / 1048576).toLocaleString('pt-BR', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+        }) + ' MB';
+    }
+
+    function mostrarDownload(r) {
+        const contagem = r.concluidos + ' de ' + r.total + ' tiles';
+        const baixando = r.estado === 'baixando';
+        let estado;
+        let detalhe = '';
+        let rotuloBotao = 'Continuar download';
+
+        switch (r.estado) {
+            case 'baixando':
+                estado = 'Baixando mapa: ' + r.percentual + '% (' + contagem + ')';
+                detalhe = formatarMB(r.bytesConcluidos) + ' de ' +
+                    formatarMB(r.bytesTotais) + ' guardados; ' +
+                    formatarMB(r.bytesTransferidos) + ' transferidos nesta sessão.';
+                if (r.falhas.length) {
+                    detalhe += ' ' + r.falhas.length + ' falha(s) até agora.';
+                }
+                break;
+            case 'completo':
+                estado = 'Mapa disponível offline (' + r.total + ' tiles, ' +
+                    formatarMB(r.bytesTotais) + ').';
+                detalhe = 'Versão ' + r.versao + '.';
+                if (r.persistente === false) {
+                    detalhe += ' O navegador não garantiu armazenamento permanente; ' +
+                        'no iPhone, use o app adicionado à Tela de Início.';
+                }
+                rotuloBotao = 'Mapa offline completo';
+                break;
+            case 'incompleto':
+                if (r.concluidos === 0) {
+                    estado = 'Mapa offline ainda não baixado.';
+                    rotuloBotao = 'Baixar mapa offline (' + formatarMB(r.bytesTotais) + ')';
+                } else {
+                    estado = 'Mapa offline incompleto: ' + contagem + '.';
+                }
+                break;
+            case 'cancelado':
+                estado = 'Download cancelado: ' + contagem + ' guardados.';
+                break;
+            case 'parcial':
+            case 'espaco':
+            case 'erro':
+                estado = r.mensagem;
+                if (r.total) detalhe = contagem + ' guardados.';
+                rotuloBotao = r.concluidos ? 'Continuar download' : 'Tentar novamente';
+                break;
+            default:
+                estado = r.mensagem || 'Mapa offline indisponível.';
+        }
+
+        offlineEstado.textContent = estado;
+        offlineEstado.classList.toggle('completo', r.estado === 'completo');
+        offlineEstado.classList.toggle('problema',
+            ['parcial', 'espaco', 'erro', 'indisponivel'].includes(r.estado));
+        offlineDetalhe.textContent = detalhe;
+        offlineProgresso.hidden = !r.total;
+        offlineProgresso.value = r.percentual || 0;
+        botaoBaixar.hidden = baixando;
+        botaoBaixar.textContent = rotuloBotao;
+        botaoBaixar.disabled = r.estado === 'completo' || r.estado === 'indisponivel';
+        botaoCancelar.hidden = !baixando;
+        if (!baixando) {
+            botaoCancelar.disabled = false;
+            botaoCancelar.textContent = 'Cancelar';
+        }
+    }
+
+    const downloadMapa = window.DownloadMapa.criar({ aoProgresso: mostrarDownload });
+
+    botaoBaixar.addEventListener('click', () => {
+        botaoBaixar.disabled = true;
+        downloadMapa.baixar();
+    });
+
+    botaoCancelar.addEventListener('click', () => {
+        botaoCancelar.disabled = true;
+        botaoCancelar.textContent = 'Cancelando...';
+        downloadMapa.cancelar();
+    });
+
+    downloadMapa.verificar().then(resultado => {
+        // Não sobrescreve o progresso se o usuário já iniciou o download.
+        if (!downloadMapa.emAndamento()) mostrarDownload(resultado);
+    });
+
+    atualizarConexao();
     window.addEventListener('online', atualizarConexao);
     window.addEventListener('offline', atualizarConexao);
+
+    // ---- Instruções passo a passo ----
+    // Usam as leituras que navegacao.js já entrega; não abrem outro GPS.
+    const painelInstrucoes = document.getElementById('painel-instrucoes');
+    const instrIcone = document.getElementById('instr-icone');
+    const instrDestino = document.getElementById('instr-destino');
+    const instrTexto = document.getElementById('instr-texto');
+    const instrDistancia = document.getElementById('instr-distancia');
+    const instrRestante = document.getElementById('instr-restante');
+    const instrSeguinte = document.getElementById('instr-seguinte');
+    const instrAviso = document.getElementById('instr-aviso');
+    const instrAnuncio = document.getElementById('instr-anuncio');
+
+    let ultimaLeituraGPS = null;
+    let acompanhadorPrincipal = null;
+    let acompanhadorParque = null;
+    let rotaDoAcompanhadorParque = null;
+    let motivoSemInstrucoes = 'Carregando instruções...';
+
+    function acompanhadorAtivo() {
+        return acompanhadorParque || acompanhadorPrincipal;
+    }
+
+    function mostrarInstrucoes(r) {
+        const parque = acompanhadorParque !== null;
+        painelInstrucoes.classList.toggle('parque', parque);
+        instrDestino.textContent = parque
+            ? 'Instruções até a portaria do parque'
+            : 'Instruções até o chalé';
+
+        if (!r) {
+            instrIcone.textContent = '…';
+            instrTexto.textContent = motivoSemInstrucoes;
+            instrDistancia.textContent = '';
+            instrRestante.textContent = '';
+            instrSeguinte.textContent = '';
+            instrAviso.textContent = '';
+            return;
+        }
+
+        instrIcone.textContent = r.icone || '…';
+        instrTexto.textContent = r.instrucao || r.mensagem || '';
+        instrDistancia.textContent = r.instrucao && r.estado !== 'chegou'
+            ? 'Manobra: ' + (r.distanciaManobraTexto || '—') : '';
+        instrRestante.textContent = r.instrucao
+            ? 'Destino: ' + (r.restanteTexto || '—') : '';
+        instrSeguinte.textContent = r.seguinte ? 'Depois: ' + r.seguinte : '';
+        instrAviso.textContent = r.instrucao ? (r.mensagem || '') : '';
+        painelInstrucoes.classList.toggle('alerta',
+            ['fora-da-rota', 'sem-sinal', 'confirmando'].includes(r.estado));
+
+        // Anuncia só quando a manobra muda, não a cada metro.
+        const anuncio = r.textoManobra || r.mensagem || '';
+        if (instrAnuncio.textContent !== anuncio) instrAnuncio.textContent = anuncio;
+    }
+
+    function alimentarInstrucoes() {
+        const acompanhador = acompanhadorAtivo();
+        if (!acompanhador) {
+            mostrarInstrucoes(null);
+            return;
+        }
+        try {
+            mostrarInstrucoes(ultimaLeituraGPS
+                ? acompanhador.atualizar(ultimaLeituraGPS)
+                : acompanhador.estadoAtual());
+        } catch (erro) {
+            console.error('Erro ao atualizar as instruções:', erro);
+        }
+    }
+
+    // Etapas do OSRM guardadas à parte; a rota principal não é alterada.
+    const etapasPrincipal = fetch('./data/etapas_rota_principal.json')
+        .then(resposta => {
+            if (!resposta.ok) throw new Error('arquivo de etapas indisponível');
+            return resposta.json();
+        })
+        .catch(erro => ({ erro: erro }));
+
+    function prepararInstrucoesPrincipal(rota, coordenadas) {
+        etapasPrincipal.then(dados => {
+            if (dados.erro || dados.formato !== 'ibitipoca-etapas-v1') {
+                throw new Error('Instruções indisponíveis: arquivo de etapas não carregado.');
+            }
+            // Etapas geradas para outra rota não são usadas.
+            if (Math.abs(dados.rota.distancia - rota.distance) > 1) {
+                throw new Error('Instruções indisponíveis: as etapas são de outra rota.');
+            }
+            const preparo = window.InstrucoesNavegacao.preparar(dados.etapas, coordenadas);
+            if (!preparo.valido) throw new Error('Instruções indisponíveis: ' + preparo.motivo);
+            acompanhadorPrincipal = window.InstrucoesNavegacao.criarAcompanhador(preparo);
+            alimentarInstrucoes();
+        }).catch(erro => {
+            console.warn(erro);
+            motivoSemInstrucoes = erro.message;
+            alimentarInstrucoes();
+        });
+    }
+
+    // ---- Rota opcional até o parque ----
+    const parqueEstado = document.getElementById('parque-estado');
+    const parqueDetalhe = document.getElementById('parque-detalhe');
+    const parqueCalcular = document.getElementById('parque-calcular');
+    const opcoesParque = document.querySelectorAll('input[name="rota-parque"]');
+
+    function descreverRotaParque(rota, recalculadaAgora) {
+        const quando = new Date(rota.criadaEm).toLocaleString('pt-BR', {
+            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+        });
+        let texto = (rota.distancia / 1000).toFixed(1).replace('.', ',') + ' km, cerca de ' +
+            Math.max(1, Math.round(rota.duracao / 60)) + ' min. Calculada em ' + quando +
+            ' a partir de ' + rota.origem.latitude.toFixed(5) + ', ' +
+            rota.origem.longitude.toFixed(5) + '.';
+        if (!recalculadaAgora) {
+            texto += ' Rota salva: não foi recalculada a partir da posição atual.';
+        }
+        if (ultimaLeituraGPS) {
+            const afastamento = window.NavegacaoGPS.distanciaMetros(
+                [ultimaLeituraGPS.latitude, ultimaLeituraGPS.longitude],
+                [rota.origem.latitude, rota.origem.longitude]);
+            if (afastamento > 300) {
+                texto += ' Você está a ' + window.InstrucoesNavegacao
+                    .formatarDistancia(afastamento) + ' do ponto de origem dela.';
+            }
+        }
+        if (!rota.etapas.length) texto += ' Esta rota não tem etapas de navegação.';
+        return texto;
+    }
+
+    function mostrarParque(e) {
+        const problema = ['erro', 'sem-rede', 'aguardando-gps'].includes(e.estado);
+        parqueEstado.classList.toggle('problema', problema);
+        parqueCalcular.hidden = !e.ativa;
+        parqueCalcular.disabled = e.estado === 'calculando';
+
+        if (!e.ativa) {
+            parqueEstado.textContent = '';
+            parqueDetalhe.textContent = '';
+        } else {
+            parqueEstado.textContent = e.mensagem;
+            parqueDetalhe.textContent = e.rota
+                ? descreverRotaParque(e.rota, e.estado === 'pronta' && e.recalculadaAgora)
+                : '';
+        }
+
+        // As instruções seguem a rota do parque enquanto ela estiver exibida.
+        const rota = e.ativa ? e.rota : null;
+        if (rota !== rotaDoAcompanhadorParque) {
+            rotaDoAcompanhadorParque = rota;
+            acompanhadorParque = null;
+            if (rota) {
+                const coordenadasParque = rota.coordenadas.map(([lon, lat]) => [lat, lon]);
+                acompanhadorParque = window.InstrucoesNavegacao.criarAcompanhador(
+                    window.InstrucoesNavegacao.preparar(rota.etapas, coordenadasParque));
+            }
+            alimentarInstrucoes();
+        }
+    }
+
+    let rotaParque = null;
+    try {
+        rotaParque = window.RotaParque.criar({
+            mapa: mapa,
+            obterPosicao: () => ultimaLeituraGPS && {
+                latitude: ultimaLeituraGPS.latitude,
+                longitude: ultimaLeituraGPS.longitude,
+                precisao: ultimaLeituraGPS.precisao,
+                timestamp: ultimaLeituraGPS.recebidaEm
+            },
+            aoMudar: mostrarParque
+        });
+    } catch (erroParque) {
+        console.error('Rota do parque indisponível:', erroParque);
+        parqueEstado.textContent = 'Rota do parque indisponível nesta página.';
+    }
+
+    opcoesParque.forEach(opcao => opcao.addEventListener('change', () => {
+        if (!rotaParque || !opcao.checked) return;
+        if (opcao.value === 'sim') rotaParque.ativar();
+        else rotaParque.desativar();
+    }));
+
+    parqueCalcular.addEventListener('click', () => {
+        if (rotaParque) rotaParque.calcular();
+    });
+
+    // ---- Circuito das Águas (opcional) ----
+    const circuitoEstado = document.getElementById('circuito-estado');
+    const opcoesCircuito = document.querySelectorAll('input[name="circuito-aguas"]');
+
+    let circuitoAguas = null;
+    try {
+        circuitoAguas = window.CircuitoAguas.criar({
+            mapa: mapa,
+            aoMudar: e => {
+                circuitoEstado.textContent = e.mensagem;
+                circuitoEstado.classList.toggle('problema', e.estado === 'erro');
+            }
+        });
+    } catch (erroCircuito) {
+        console.error('Circuito das Águas indisponível:', erroCircuito);
+        circuitoEstado.textContent = 'Circuito das Águas indisponível nesta página.';
+    }
+
+    opcoesCircuito.forEach(opcao => opcao.addEventListener('change', () => {
+        if (!circuitoAguas || !opcao.checked) return;
+        if (opcao.value === 'sim') circuitoAguas.ativar();
+        else circuitoAguas.desativar();
+    }));
 
     fetch('./data/rota_navegacao_offline.json')
         .then(resposta => {
@@ -196,26 +748,21 @@
                     'Não foi possível carregar o arquivo da rota.'
                 );
             }
-
             return resposta.json();
         })
         .then(dados => {
             if (dados.code !== 'Ok' || !dados.routes?.length) {
-                throw new Error(
-                    'O arquivo não contém uma rota válida.'
-                );
+                throw new Error('O arquivo não contém uma rota válida.');
             }
 
             const rota = dados.routes[0];
 
             if (!rota.geometry?.coordinates?.length) {
-                throw new Error(
-                    'A rota não possui coordenadas para desenhar.'
-                );
+                throw new Error('A rota não possui coordenadas.');
             }
 
-            // O OSRM fornece [longitude, latitude].
-            // O Leaflet utiliza [latitude, longitude].
+            // OSRM: [longitude, latitude].
+            // Leaflet: [latitude, longitude].
             const coordenadas = rota.geometry.coordinates.map(
                 ([longitude, latitude]) => [latitude, longitude]
             );
@@ -225,17 +772,17 @@
                 weight: 5,
                 opacity: 0.9
             }).addTo(mapa);
-
-            L.marker(coordenadas[0])
+L.marker(coordenadas[0], { icon: iconeMarcador })
                 .addTo(mapa)
                 .bindPopup('Início da rota');
 
-            L.marker(coordenadas[coordenadas.length - 1])
+            L.marker(coordenadas[coordenadas.length - 1], { icon: iconeMarcador })
                 .addTo(mapa)
                 .bindPopup('Fim da rota');
 
             mapa.fitBounds(linhaRota.getBounds(), {
-                padding: [20, 20]
+                padding: [20, 20],
+                maxZoom: 13
             });
 
             distancia.textContent =
@@ -247,22 +794,96 @@
             const horas = Math.floor(duracaoMinutos / 60);
             const minutos = duracaoMinutos % 60;
 
-            status.textContent =
-                'Rota carregada com sucesso. Distância: ' +
+            mensagemRota =
+                'Rota carregada. Distância: ' +
                 distancia.textContent +
                 '. Tempo estimado pelo OSRM: ' +
                 horas + ' h ' + minutos + ' min.';
+            atualizarStatus();
 
             console.log('Rota carregada:', rota);
-            console.log('Quantidade de coordenadas:', coordenadas.length);
+            console.log(
+                'Quantidade de coordenadas:',
+                coordenadas.length
+            );
+
+            prepararInstrucoesPrincipal(rota, coordenadas);
+
+            const elementoGPS = document.getElementById('gps');
+            let rastreamentoGPS = null;
+
+            try {
+                rastreamentoGPS = window.NavegacaoGPS.iniciar({
+                    mapa: mapa,
+                    coordenadas: coordenadas,
+                    aoAtualizar: function (dados) {
+                        const mensagens = {
+                            aguardando: 'Aguardando permissão e sinal...',
+                            indisponivel: 'GPS indisponível neste navegador.',
+                            erro: dados.mensagem || 'Erro ao obter localização.',
+                            ativo: dados.precisaoInsuficiente
+                                ? 'GPS ativo (precisão baixa)'
+                                : 'GPS ativo',
+                            desvio: 'ATENÇÃO: possível desvio da rota!'
+                        };
+
+                        let texto = mensagens[dados.estado] ||
+                            dados.mensagem ||
+                            'Estado GPS desconhecido';
+                        if (dados.estado === 'indisponivel' && dados.mensagem) {
+                            texto = dados.mensagem;
+                        }
+
+                        if (typeof dados.precisaoMetros === 'number') {
+                            texto += ' | Precisão: ±' +
+                                Math.round(dados.precisaoMetros) + ' m';
+                        }
+
+                        if (typeof dados.distanciaRotaMetros === 'number') {
+                            texto += ' | Distância da rota: ' +
+                                Math.round(dados.distanciaRotaMetros) + ' m';
+                        }
+
+                        elementoGPS.textContent = texto;
+                        document.getElementById('cartao-gps').classList.toggle(
+                            'alerta',
+                            dados.estado === 'desvio'
+                        );
+                        elementoGPS.setAttribute(
+                            'aria-live',
+                            dados.estado === 'desvio' || dados.estado === 'erro'
+                                ? 'assertive'
+                                : 'polite'
+                        );
+
+                        console.log('Estado GPS:', dados);
+
+                        if (typeof dados.latitude === 'number') {
+                            ultimaLeituraGPS = {
+                                latitude: dados.latitude,
+                                longitude: dados.longitude,
+                                precisao: dados.precisaoMetros,
+                                timestamp: dados.timestamp,
+                                recebidaEm: Date.now()
+                            };
+                            alimentarInstrucoes();
+                        } else if (dados.estado === 'erro' && acompanhadorAtivo()) {
+                            mostrarInstrucoes(acompanhadorAtivo().marcarSemSinal());
+                        }
+                    }
+                });
+            } catch (erroGPS) {
+                elementoGPS.textContent =
+                    'Não foi possível iniciar o GPS: ' + erroGPS.message;
+                console.error('Falha ao iniciar o GPS:', erroGPS);
+            }
         })
         .catch(erro => {
             console.error('Erro ao carregar a rota:', erro);
-
-            status.textContent =
+            mensagemRota =
                 'Erro ao carregar a rota: ' + erro.message +
-                ' Se o HTML foi aberto diretamente como arquivo, ' +
-                'será necessário executar a aplicação em localhost.';
+                ' Verifique se a aplicação Java está em execução.';
+            atualizarStatus();
         });
 </script>
 </body>

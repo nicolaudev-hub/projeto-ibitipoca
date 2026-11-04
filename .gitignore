@@ -10,3 +10,21 @@
 # Java compilado
 /out/
 *.class
+
+# Backups e mapas offline pesados
+*.bak
+*.bak.*
+*.mbtiles
+*.tmp
+*.temp
+*~
+
+# Backups e artefatos de teste locais, preservados fora da publicacao
+/rota_teste*.json
+/src/main/resources/static/data/rota_teste*.json
+/src/main/resources/static/index-antes-vectorgrid.html
+/src/main/resources/static/index.html.backup-*
+/src/main/resources/static/leaflet/Leaflet.VectorGrid.bundled.js
+
+# Backups locais
+*.backup-*
