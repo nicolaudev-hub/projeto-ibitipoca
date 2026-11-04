@@ -25,3 +25,6 @@
 /src/main/resources/static/index-antes-vectorgrid.html
 /src/main/resources/static/index.html.backup-*
 /src/main/resources/static/leaflet/Leaflet.VectorGrid.bundled.js
+
+# Backups locais
+*.backup-*

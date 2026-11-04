@@ -3,7 +3,8 @@
  *
  * Estratégias:
  * - Navegação (página): rede primeiro, com limite de tempo; sem rede,
- *   usa a cópia guardada do index.html.
+ *   usa a cópia guardada da própria página (index.html ou novo.html);
+ *   sem essa cópia, usa a do index.html.
  * - Demais recursos do app (Leaflet, JS, rota, manifesto): cache primeiro.
  * - Tiles (./tiles/{z}/{x}/{y}.png): cache primeiro, em cache separado.
  *   Tile ausente sem conexão responde 504; o Leaflet trata como falha
@@ -15,7 +16,7 @@
  */
 'use strict';
 
-const VERSAO_APP = '2';
+const VERSAO_APP = '5';
 const VERSAO_TILES = '5ca315088105b9b6';
 const PREFIXO_CACHE = 'ibitipoca-';
 const CACHE_APP = PREFIXO_CACHE + 'app-v' + VERSAO_APP + '-' + VERSAO_TILES;
@@ -29,14 +30,42 @@ const RECURSOS_APP = [
     './leaflet/images/marker-icon.png',
     './leaflet/images/marker-shadow.png',
     './js/navegacao.js',
+    './js/instrucoes.js',
+    './js/rota-parque.js',
+    './js/circuito-aguas.js',
     './js/registro-sw.js',
     './js/download-mapa.js',
     './data/rota_navegacao_offline.json',
-    './tiles/manifesto.json'
+    './data/etapas_rota_principal.json',
+    './data/circuito_aguas.json',
+    './tiles/manifesto.json',
+    // Página de testes do visual novo e seus arquivos.
+    './novo.html',
+    './css/tokens.css',
+    './css/base.css',
+    './css/sidebar.css',
+    './css/components.css',
+    './css/map.css',
+    './css/navegacao-novo.css',
+    './js/config.js',
+    './js/util.js',
+    './js/map.js',
+    './js/simulation.js',
+    './js/theme.js',
+    './js/sidebar.js',
+    './js/novo-app.js'
 ];
 
 const BASE = new URL('./', self.location).pathname;
 const URL_PAGINA = new URL('./index.html', self.location).href;
+const URL_PAGINA_NOVA = new URL('./novo.html', self.location).href;
+
+// Cópia guardada correspondente a cada página; outros caminhos não têm.
+function chavePagina(url) {
+    if (url.pathname === BASE || url.pathname === BASE + 'index.html') return URL_PAGINA;
+    if (url.pathname === BASE + 'novo.html') return URL_PAGINA_NOVA;
+    return null;
+}
 
 self.addEventListener('install', evento => {
     evento.waitUntil(
@@ -85,16 +114,19 @@ function guardar(evento, nomeCache, chave, resposta) {
     );
 }
 
-function paginaGuardada() {
-    return caches.open(CACHE_APP).then(cache => cache.match(URL_PAGINA));
+// Sem cópia da página pedida (ou fora delas), usa a do index.html.
+function paginaGuardada(chave) {
+    return caches.open(CACHE_APP).then(cache =>
+        (chave ? cache.match(chave) : Promise.resolve(undefined))
+            .then(guardada => guardada || cache.match(URL_PAGINA)));
 }
 
 function redePrimeiro(evento, url) {
-    const ehPagina = url.pathname === BASE || url.pathname === BASE + 'index.html';
+    const chave = chavePagina(url);
 
     const daRede = fetch(evento.request).then(resposta => {
-        if (resposta.ok && ehPagina) {
-            guardar(evento, CACHE_APP, URL_PAGINA, resposta.clone());
+        if (resposta.ok && chave) {
+            guardar(evento, CACHE_APP, chave, resposta.clone());
         }
         return resposta;
     });
@@ -111,7 +143,7 @@ function redePrimeiro(evento, url) {
         clearTimeout(temporizador);
         if (resposta) return resposta;
         // Sem rede, rede lenta ou erro do servidor: tenta a cópia guardada.
-        return paginaGuardada().then(guardada => guardada || daRede);
+        return paginaGuardada(chave).then(guardada => guardada || daRede);
     });
 }
 

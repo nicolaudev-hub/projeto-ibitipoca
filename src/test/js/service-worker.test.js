@@ -293,6 +293,51 @@ test('navegação para outro caminho não substitui a cópia da página', async 
     assert.ok(Buffer.from(await pagina.arrayBuffer()).equals(ler('index.html')));
 });
 
+// ---- Página de testes novo.html ----
+
+test('novo.html: tudo que a página carrega localmente está no pré-cache', () => {
+    const recursos = criarAmbiente().constante('RECURSOS_APP');
+    const html = ler('novo.html').toString('utf8');
+    const usados = new Set();
+    for (const m of html.matchAll(/(?:src|href)="(\.\/[^"]+)"/g)) usados.add(m[1]);
+    assert.ok(usados.size >= 15, 'deveria encontrar os recursos do novo.html');
+    const faltando = [...usados].filter(u => !recursos.includes(u));
+    assert.deepEqual(faltando, []);
+    assert.ok(recursos.includes('./novo.html'));
+});
+
+test('novo.html offline: devolve a própria cópia, não a do index.html', async () => {
+    const amb = criarAmbiente();
+    await amb.instalarEAtivar();
+    amb.opcoes.rede = 'offline';
+    const nova = await amb.buscar('/novo.html', { mode: 'navigate' });
+    assert.ok(Buffer.from(await nova.arrayBuffer()).equals(ler('novo.html')));
+    const principal = await amb.buscar('/', { mode: 'navigate' });
+    assert.ok(Buffer.from(await principal.arrayBuffer()).equals(ler('index.html')));
+});
+
+test('novo.html online: atualiza só a própria cópia', async () => {
+    const amb = criarAmbiente();
+    await amb.instalarEAtivar();
+    amb.opcoes.respostas['/novo.html'] = () => new Response('<p>novo atualizado</p>', { status: 200 });
+    await amb.buscar('/novo.html', { mode: 'navigate' });
+    amb.opcoes.rede = 'offline';
+    assert.equal(await (await amb.buscar('/novo.html', { mode: 'navigate' })).text(),
+        '<p>novo atualizado</p>');
+    const principal = await amb.buscar('/', { mode: 'navigate' });
+    assert.ok(Buffer.from(await principal.arrayBuffer()).equals(ler('index.html')));
+});
+
+test('novo.html offline sem cópia própria: usa a do index.html', async () => {
+    const amb = criarAmbiente();
+    await amb.instalarEAtivar();
+    const cache = amb.armazenamento.get(amb.constante('CACHE_APP'));
+    cache.itens.delete(amb.constante('URL_PAGINA_NOVA'));
+    amb.opcoes.rede = 'offline';
+    const resposta = await amb.buscar('/novo.html', { mode: 'navigate' });
+    assert.ok(Buffer.from(await resposta.arrayBuffer()).equals(ler('index.html')));
+});
+
 // ---- Recursos do app: cache primeiro ----
 
 test('recursos do app: vêm do cache sem acessar a rede', async () => {

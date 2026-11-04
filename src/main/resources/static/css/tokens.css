@@ -1,0 +1,68 @@
+/* ============================================================
+   tokens.css — paleta e design tokens (tema claro + escuro)
+   Paleta moderna: fundo neutro frio, accent índigo/violeta,
+   superfícies com leve profundidade e bordas suaves.
+   ============================================================ */
+
+:root {
+    /* Tema escuro (padrão) */
+    --bg: #0b0d12;
+    --bg-grid: rgba(255, 255, 255, 0.02);
+    --surface: #12151d;
+    --surface-2: #171b25;
+    --surface-3: #1e2430;
+    --border: #262c3a;
+    --border-strong: #333b4d;
+
+    --text: #eef1f7;
+    --text-dim: #9aa3b5;
+    --text-faint: #6b7488;
+
+    --accent: #7c7bff;
+    --accent-2: #5b8cff;
+    --accent-grad: linear-gradient(135deg, #7c7bff, #5b8cff);
+    --accent-soft: rgba(124, 123, 255, 0.14);
+    --accent-ring: rgba(124, 123, 255, 0.28);
+
+    --route: #6ee7b7;
+    --gps: #5b8cff;
+
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --danger: #f87171;
+
+    --radius-sm: 10px;
+    --radius: 14px;
+    --radius-lg: 20px;
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+    --shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+body.light {
+    --bg: #f4f6fb;
+    --bg-grid: rgba(15, 23, 42, 0.03);
+    --surface: #ffffff;
+    --surface-2: #f6f8fc;
+    --surface-3: #eef1f8;
+    --border: #e2e7f0;
+    --border-strong: #d2d9e6;
+
+    --text: #121722;
+    --text-dim: #5a6577;
+    --text-faint: #8a94a6;
+
+    --accent: #6366f1;
+    --accent-2: #3b82f6;
+    --accent-grad: linear-gradient(135deg, #6366f1, #3b82f6);
+    --accent-soft: rgba(99, 102, 241, 0.1);
+    --accent-ring: rgba(99, 102, 241, 0.22);
+
+    --route: #10b981;
+    --gps: #3b82f6;
+
+    --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.08);
+    --shadow: 0 10px 34px rgba(15, 23, 42, 0.14);
+}

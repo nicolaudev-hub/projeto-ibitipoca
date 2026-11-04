@@ -134,11 +134,95 @@
         #offline-baixar:disabled { opacity: 0.6; cursor: default; }
         #offline-cancelar { color: #173b2b; background: white; }
 
+        .painel-instrucoes {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            padding: 12px;
+            background: #173b2b;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .painel-instrucoes.parque { background: #8a3a0b; }
+        .painel-instrucoes.alerta { outline: 3px solid #ffd43b; }
+
+        .instr-icone {
+            flex: 0 0 52px;
+            height: 52px;
+            font-size: 36px;
+            line-height: 52px;
+            text-align: center;
+            background: #ffffff26;
+            border-radius: 8px;
+        }
+
+        .instr-corpo { flex: 1; min-width: 0; }
+        .instr-corpo p { margin: 0; }
+        .instr-destino { font-size: 12px; opacity: 0.85; }
+        .instr-texto { font-size: 18px; font-weight: bold; line-height: 1.3; }
+        .instr-detalhe { margin-top: 4px !important; font-size: 14px; }
+        .instr-detalhe span + span::before { content: " · "; }
+        .instr-seguinte, .instr-aviso { margin-top: 4px !important; font-size: 13px; opacity: 0.9; }
+        .instr-aviso:empty, .instr-seguinte:empty { display: none; }
+
+        .visualmente-oculto {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+        }
+
+        .painel-parque {
+            margin-top: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000014;
+        }
+
+        .painel-parque fieldset { margin: 0; padding: 0; border: 0; }
+        .painel-parque legend { padding: 0; font-size: 16px; font-weight: bold; }
+        .painel-parque p { margin: 8px 0 0; }
+        .opcoes-parque { display: flex; gap: 10px; margin-top: 10px; }
+
+        .opcoes-parque label {
+            flex: 1;
+            padding: 10px 14px;
+            font: bold 15px Arial, sans-serif;
+            text-align: center;
+            border: 2px solid #8a3a0b;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .opcoes-parque input { margin: 0 6px 0 0; }
+        #parque-estado, #circuito-estado { font-weight: bold; }
+        #parque-estado.problema, #circuito-estado.problema { color: #a61e1e; }
+        .painel-circuito .opcoes-parque label { border-color: #0b7285; }
+
+        #parque-calcular {
+            margin-top: 10px;
+            padding: 10px 14px;
+            font: bold 14px Arial, sans-serif;
+            color: white;
+            background: #8a3a0b;
+            border: 2px solid #8a3a0b;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        #parque-calcular:disabled { opacity: 0.6; cursor: default; }
+
         @media (max-width: 600px) {
             main { padding: 12px; }
             header h1 { font-size: 20px; }
             #mapa { height: 400px; }
             .cartao { min-width: 130px; }
+            .instr-texto { font-size: 16px; }
         }
     </style>
 </head>
@@ -165,6 +249,20 @@
         </div>
     </section>
 
+    <section id="painel-instrucoes" class="painel-instrucoes" aria-labelledby="instr-destino">
+        <div id="instr-icone" class="instr-icone" aria-hidden="true">…</div>
+        <div class="instr-corpo">
+            <p id="instr-destino" class="instr-destino">Instruções até o chalé</p>
+            <p id="instr-texto" class="instr-texto">Carregando instruções...</p>
+            <p class="instr-detalhe">
+                <span id="instr-distancia"></span><span id="instr-restante"></span>
+            </p>
+            <p id="instr-seguinte" class="instr-seguinte"></p>
+            <p id="instr-aviso" class="instr-aviso"></p>
+        </div>
+        <p id="instr-anuncio" class="visualmente-oculto" aria-live="polite"></p>
+    </section>
+
     <section>
         <div id="mapa"></div>
         <div id="status">Inicializando o mapa...</div>
@@ -173,6 +271,43 @@
             aplicação; fora da área coberta o mapa fica sem fundo.
             O mapa acompanha sua posição; arraste para explorar e toque em
             "Centralizar" para voltar a seguir. O GPS exige HTTPS no celular.
+        </p>
+    </section>
+
+    <section class="painel-parque">
+        <fieldset>
+            <legend>Deseja adicionar a rota até o parque?</legend>
+            <div class="opcoes-parque">
+                <label><input type="radio" name="rota-parque" value="nao" checked> Não</label>
+                <label><input type="radio" name="rota-parque" value="sim"> Sim</label>
+            </div>
+        </fieldset>
+        <p id="parque-estado" aria-live="polite"></p>
+        <p id="parque-detalhe" class="observacao"></p>
+        <button id="parque-calcular" type="button" hidden>Calcular a partir da posição atual</button>
+        <p class="observacao">
+            Destino: portaria de visitantes do Parque Estadual do Ibitipoca
+            (Conceição de Ibitipoca). A rota aparece em laranja tracejado.
+            O cálculo exige internet; a última rota calculada fica salva neste
+            aparelho e pode ser exibida sem internet, mas não é recalculada offline.
+        </p>
+    </section>
+
+    <section class="painel-parque painel-circuito">
+        <fieldset>
+            <legend>Deseja adicionar o Circuito das Águas?</legend>
+            <div class="opcoes-parque">
+                <label><input type="radio" name="circuito-aguas" value="nao" checked> Não</label>
+                <label><input type="radio" name="circuito-aguas" value="sim"> Sim</label>
+            </div>
+        </fieldset>
+        <p id="circuito-estado" aria-live="polite"></p>
+        <p class="observacao">
+            Trilha dentro do parque, com início e fim na portaria. O circuito
+            aparece em azul-petróleo e as atrações em azul; toque numa atração
+            para ver o nome. O traçado foi montado com as trilhas do
+            OpenStreetMap e não é o mapa oficial do parque: siga a sinalização
+            local. Funciona sem internet depois da primeira visita.
         </p>
     </section>
 
@@ -190,6 +325,9 @@
 
 <script src="./leaflet/leaflet.js"></script>
 <script src="./js/navegacao.js"></script>
+<script src="./js/instrucoes.js"></script>
+<script src="./js/rota-parque.js"></script>
+<script src="./js/circuito-aguas.js"></script>
 <script src="./js/registro-sw.js"></script>
 <script src="./js/download-mapa.js"></script>
 <script>
@@ -394,6 +532,215 @@
     window.addEventListener('online', atualizarConexao);
     window.addEventListener('offline', atualizarConexao);
 
+    // ---- Instruções passo a passo ----
+    // Usam as leituras que navegacao.js já entrega; não abrem outro GPS.
+    const painelInstrucoes = document.getElementById('painel-instrucoes');
+    const instrIcone = document.getElementById('instr-icone');
+    const instrDestino = document.getElementById('instr-destino');
+    const instrTexto = document.getElementById('instr-texto');
+    const instrDistancia = document.getElementById('instr-distancia');
+    const instrRestante = document.getElementById('instr-restante');
+    const instrSeguinte = document.getElementById('instr-seguinte');
+    const instrAviso = document.getElementById('instr-aviso');
+    const instrAnuncio = document.getElementById('instr-anuncio');
+
+    let ultimaLeituraGPS = null;
+    let acompanhadorPrincipal = null;
+    let acompanhadorParque = null;
+    let rotaDoAcompanhadorParque = null;
+    let motivoSemInstrucoes = 'Carregando instruções...';
+
+    function acompanhadorAtivo() {
+        return acompanhadorParque || acompanhadorPrincipal;
+    }
+
+    function mostrarInstrucoes(r) {
+        const parque = acompanhadorParque !== null;
+        painelInstrucoes.classList.toggle('parque', parque);
+        instrDestino.textContent = parque
+            ? 'Instruções até a portaria do parque'
+            : 'Instruções até o chalé';
+
+        if (!r) {
+            instrIcone.textContent = '…';
+            instrTexto.textContent = motivoSemInstrucoes;
+            instrDistancia.textContent = '';
+            instrRestante.textContent = '';
+            instrSeguinte.textContent = '';
+            instrAviso.textContent = '';
+            return;
+        }
+
+        instrIcone.textContent = r.icone || '…';
+        instrTexto.textContent = r.instrucao || r.mensagem || '';
+        instrDistancia.textContent = r.instrucao && r.estado !== 'chegou'
+            ? 'Manobra: ' + (r.distanciaManobraTexto || '—') : '';
+        instrRestante.textContent = r.instrucao
+            ? 'Destino: ' + (r.restanteTexto || '—') : '';
+        instrSeguinte.textContent = r.seguinte ? 'Depois: ' + r.seguinte : '';
+        instrAviso.textContent = r.instrucao ? (r.mensagem || '') : '';
+        painelInstrucoes.classList.toggle('alerta',
+            ['fora-da-rota', 'sem-sinal', 'confirmando'].includes(r.estado));
+
+        // Anuncia só quando a manobra muda, não a cada metro.
+        const anuncio = r.textoManobra || r.mensagem || '';
+        if (instrAnuncio.textContent !== anuncio) instrAnuncio.textContent = anuncio;
+    }
+
+    function alimentarInstrucoes() {
+        const acompanhador = acompanhadorAtivo();
+        if (!acompanhador) {
+            mostrarInstrucoes(null);
+            return;
+        }
+        try {
+            mostrarInstrucoes(ultimaLeituraGPS
+                ? acompanhador.atualizar(ultimaLeituraGPS)
+                : acompanhador.estadoAtual());
+        } catch (erro) {
+            console.error('Erro ao atualizar as instruções:', erro);
+        }
+    }
+
+    // Etapas do OSRM guardadas à parte; a rota principal não é alterada.
+    const etapasPrincipal = fetch('./data/etapas_rota_principal.json')
+        .then(resposta => {
+            if (!resposta.ok) throw new Error('arquivo de etapas indisponível');
+            return resposta.json();
+        })
+        .catch(erro => ({ erro: erro }));
+
+    function prepararInstrucoesPrincipal(rota, coordenadas) {
+        etapasPrincipal.then(dados => {
+            if (dados.erro || dados.formato !== 'ibitipoca-etapas-v1') {
+                throw new Error('Instruções indisponíveis: arquivo de etapas não carregado.');
+            }
+            // Etapas geradas para outra rota não são usadas.
+            if (Math.abs(dados.rota.distancia - rota.distance) > 1) {
+                throw new Error('Instruções indisponíveis: as etapas são de outra rota.');
+            }
+            const preparo = window.InstrucoesNavegacao.preparar(dados.etapas, coordenadas);
+            if (!preparo.valido) throw new Error('Instruções indisponíveis: ' + preparo.motivo);
+            acompanhadorPrincipal = window.InstrucoesNavegacao.criarAcompanhador(preparo);
+            alimentarInstrucoes();
+        }).catch(erro => {
+            console.warn(erro);
+            motivoSemInstrucoes = erro.message;
+            alimentarInstrucoes();
+        });
+    }
+
+    // ---- Rota opcional até o parque ----
+    const parqueEstado = document.getElementById('parque-estado');
+    const parqueDetalhe = document.getElementById('parque-detalhe');
+    const parqueCalcular = document.getElementById('parque-calcular');
+    const opcoesParque = document.querySelectorAll('input[name="rota-parque"]');
+
+    function descreverRotaParque(rota, recalculadaAgora) {
+        const quando = new Date(rota.criadaEm).toLocaleString('pt-BR', {
+            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+        });
+        let texto = (rota.distancia / 1000).toFixed(1).replace('.', ',') + ' km, cerca de ' +
+            Math.max(1, Math.round(rota.duracao / 60)) + ' min. Calculada em ' + quando +
+            ' a partir de ' + rota.origem.latitude.toFixed(5) + ', ' +
+            rota.origem.longitude.toFixed(5) + '.';
+        if (!recalculadaAgora) {
+            texto += ' Rota salva: não foi recalculada a partir da posição atual.';
+        }
+        if (ultimaLeituraGPS) {
+            const afastamento = window.NavegacaoGPS.distanciaMetros(
+                [ultimaLeituraGPS.latitude, ultimaLeituraGPS.longitude],
+                [rota.origem.latitude, rota.origem.longitude]);
+            if (afastamento > 300) {
+                texto += ' Você está a ' + window.InstrucoesNavegacao
+                    .formatarDistancia(afastamento) + ' do ponto de origem dela.';
+            }
+        }
+        if (!rota.etapas.length) texto += ' Esta rota não tem etapas de navegação.';
+        return texto;
+    }
+
+    function mostrarParque(e) {
+        const problema = ['erro', 'sem-rede', 'aguardando-gps'].includes(e.estado);
+        parqueEstado.classList.toggle('problema', problema);
+        parqueCalcular.hidden = !e.ativa;
+        parqueCalcular.disabled = e.estado === 'calculando';
+
+        if (!e.ativa) {
+            parqueEstado.textContent = '';
+            parqueDetalhe.textContent = '';
+        } else {
+            parqueEstado.textContent = e.mensagem;
+            parqueDetalhe.textContent = e.rota
+                ? descreverRotaParque(e.rota, e.estado === 'pronta' && e.recalculadaAgora)
+                : '';
+        }
+
+        // As instruções seguem a rota do parque enquanto ela estiver exibida.
+        const rota = e.ativa ? e.rota : null;
+        if (rota !== rotaDoAcompanhadorParque) {
+            rotaDoAcompanhadorParque = rota;
+            acompanhadorParque = null;
+            if (rota) {
+                const coordenadasParque = rota.coordenadas.map(([lon, lat]) => [lat, lon]);
+                acompanhadorParque = window.InstrucoesNavegacao.criarAcompanhador(
+                    window.InstrucoesNavegacao.preparar(rota.etapas, coordenadasParque));
+            }
+            alimentarInstrucoes();
+        }
+    }
+
+    let rotaParque = null;
+    try {
+        rotaParque = window.RotaParque.criar({
+            mapa: mapa,
+            obterPosicao: () => ultimaLeituraGPS && {
+                latitude: ultimaLeituraGPS.latitude,
+                longitude: ultimaLeituraGPS.longitude,
+                precisao: ultimaLeituraGPS.precisao,
+                timestamp: ultimaLeituraGPS.recebidaEm
+            },
+            aoMudar: mostrarParque
+        });
+    } catch (erroParque) {
+        console.error('Rota do parque indisponível:', erroParque);
+        parqueEstado.textContent = 'Rota do parque indisponível nesta página.';
+    }
+
+    opcoesParque.forEach(opcao => opcao.addEventListener('change', () => {
+        if (!rotaParque || !opcao.checked) return;
+        if (opcao.value === 'sim') rotaParque.ativar();
+        else rotaParque.desativar();
+    }));
+
+    parqueCalcular.addEventListener('click', () => {
+        if (rotaParque) rotaParque.calcular();
+    });
+
+    // ---- Circuito das Águas (opcional) ----
+    const circuitoEstado = document.getElementById('circuito-estado');
+    const opcoesCircuito = document.querySelectorAll('input[name="circuito-aguas"]');
+
+    let circuitoAguas = null;
+    try {
+        circuitoAguas = window.CircuitoAguas.criar({
+            mapa: mapa,
+            aoMudar: e => {
+                circuitoEstado.textContent = e.mensagem;
+                circuitoEstado.classList.toggle('problema', e.estado === 'erro');
+            }
+        });
+    } catch (erroCircuito) {
+        console.error('Circuito das Águas indisponível:', erroCircuito);
+        circuitoEstado.textContent = 'Circuito das Águas indisponível nesta página.';
+    }
+
+    opcoesCircuito.forEach(opcao => opcao.addEventListener('change', () => {
+        if (!circuitoAguas || !opcao.checked) return;
+        if (opcao.value === 'sim') circuitoAguas.ativar();
+        else circuitoAguas.desativar();
+    }));
+
     fetch('./data/rota_navegacao_offline.json')
         .then(resposta => {
             if (!resposta.ok) {
@@ -460,6 +807,8 @@ L.marker(coordenadas[0], { icon: iconeMarcador })
                 coordenadas.length
             );
 
+            prepararInstrucoesPrincipal(rota, coordenadas);
+
             const elementoGPS = document.getElementById('gps');
             let rastreamentoGPS = null;
 
@@ -508,6 +857,19 @@ L.marker(coordenadas[0], { icon: iconeMarcador })
                         );
 
                         console.log('Estado GPS:', dados);
+
+                        if (typeof dados.latitude === 'number') {
+                            ultimaLeituraGPS = {
+                                latitude: dados.latitude,
+                                longitude: dados.longitude,
+                                precisao: dados.precisaoMetros,
+                                timestamp: dados.timestamp,
+                                recebidaEm: Date.now()
+                            };
+                            alimentarInstrucoes();
+                        } else if (dados.estado === 'erro' && acompanhadorAtivo()) {
+                            mostrarInstrucoes(acompanhadorAtivo().marcarSemSinal());
+                        }
                     }
                 });
             } catch (erroGPS) {

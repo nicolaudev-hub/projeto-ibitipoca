@@ -1,0 +1,693 @@
+{
+ "formato": "ibitipoca-etapas-v1",
+ "fonte": {
+  "servico": "OSRM (https://router.project-osrm.org, perfil driving)",
+  "consulta": "https://router.project-osrm.org/route/v1/driving/-43.346975,-21.759833;-43.865576,-21.787827;-43.928103,-21.716948?overview=full&geometries=geojson&steps=true",
+  "geradoEm": "2026-10-30T22:20:18.871Z",
+  "dadosMapa": "© colaboradores do OpenStreetMap"
+ },
+ "rota": {
+  "arquivo": "rota_navegacao_offline.json",
+  "distancia": 89585.1,
+  "duracao": 6356.3,
+  "waypoints": [
+   [
+    -43.346975,
+    -21.759833
+   ],
+   [
+    -43.865576,
+    -21.787827
+   ],
+   [
+    -43.928103,
+    -21.716948
+   ]
+  ]
+ },
+ "etapas": [
+  {
+   "trecho": 0,
+   "nome": "Avenida Presidente Getúlio Vargas",
+   "ref": "",
+   "distancia": 393.4,
+   "duracao": 31.9,
+   "manobra": {
+    "tipo": "depart",
+    "localizacao": [
+     -43.346975,
+     -21.759833
+    ],
+    "rumoAntes": 0,
+    "rumoDepois": 129
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Praça Presidente Antonio Carlos",
+   "ref": "",
+   "distancia": 80.6,
+   "duracao": 5.3,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.34403,
+     -21.762081
+    ],
+    "rumoAntes": 126,
+    "rumoDepois": 104,
+    "modificador": "slight left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua Doutor Paulo Fontin",
+   "ref": "",
+   "distancia": 40.9,
+   "duracao": 2.6,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.343455,
+     -21.761838
+    ],
+    "rumoAntes": 8,
+    "rumoDepois": 348,
+    "modificador": "slight left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Travessa Doutor Prisco",
+   "ref": "",
+   "distancia": 161.7,
+   "duracao": 17.6,
+   "manobra": {
+    "tipo": "fork",
+    "localizacao": [
+     -43.343526,
+     -21.761475
+    ],
+    "rumoAntes": 348,
+    "rumoDepois": 358,
+    "modificador": "slight right"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua João Pessoa de Rezende",
+   "ref": "",
+   "distancia": 77.4,
+   "duracao": 7.1,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.342695,
+     -21.760285
+    ],
+    "rumoAntes": 39,
+    "rumoDepois": 310,
+    "modificador": "left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Avenida Francisco Bernardino",
+   "ref": "",
+   "distancia": 1100.8,
+   "duracao": 80.9,
+   "manobra": {
+    "tipo": "new name",
+    "localizacao": [
+     -43.343287,
+     -21.759866
+    ],
+    "rumoAntes": 292,
+    "rumoDepois": 296,
+    "modificador": "straight"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Praça Dr. Caminha Sampaio",
+   "ref": "",
+   "distancia": 88.1,
+   "duracao": 7.9,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.351308,
+     -21.753355
+    ],
+    "rumoAntes": 310,
+    "rumoDepois": 257,
+    "modificador": "left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Avenida dos Andradas",
+   "ref": "",
+   "distancia": 1023.8,
+   "duracao": 71.6,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.352023,
+     -21.753697
+    ],
+    "rumoAntes": 244,
+    "rumoDepois": 268,
+    "modificador": "slight right"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua Benjamin Guimarães",
+   "ref": "BR-440",
+   "distancia": 191.7,
+   "duracao": 18.2,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.359197,
+     -21.74817
+    ],
+    "rumoAntes": 284,
+    "rumoDepois": 258,
+    "modificador": "slight left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua Benjamin Guimarães",
+   "ref": "",
+   "distancia": 7.7,
+   "duracao": 0.6,
+   "manobra": {
+    "tipo": "roundabout",
+    "localizacao": [
+     -43.360592,
+     -21.749043
+    ],
+    "rumoAntes": 236,
+    "rumoDepois": 262,
+    "modificador": "slight right",
+    "saida": 1
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua Benjamin Guimarães",
+   "ref": "",
+   "distancia": 66.4,
+   "duracao": 6,
+   "manobra": {
+    "tipo": "exit roundabout",
+    "localizacao": [
+     -43.36066,
+     -21.749068
+    ],
+    "rumoAntes": 233,
+    "rumoDepois": 246,
+    "modificador": "straight",
+    "saida": 1
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua Professora Violeta dos Santos",
+   "ref": "",
+   "distancia": 434.9,
+   "duracao": 39.2,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.361188,
+     -21.749393
+    ],
+    "rumoAntes": 222,
+    "rumoDepois": 260,
+    "modificador": "right"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua Bernardo Mascarenhas",
+   "ref": "",
+   "distancia": 1853.7,
+   "duracao": 129,
+   "manobra": {
+    "tipo": "new name",
+    "localizacao": [
+     -43.363967,
+     -21.746939
+    ],
+    "rumoAntes": 293,
+    "rumoDepois": 293,
+    "modificador": "straight"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Avenida Olavo Bilac",
+   "ref": "",
+   "distancia": 1018.1,
+   "duracao": 66.7,
+   "manobra": {
+    "tipo": "new name",
+    "localizacao": [
+     -43.378773,
+     -21.738018
+    ],
+    "rumoAntes": 281,
+    "rumoDepois": 264,
+    "modificador": "straight"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Avenida Presidente Juscelino Kubitschek",
+   "ref": "",
+   "distancia": 4878,
+   "duracao": 390,
+   "manobra": {
+    "tipo": "new name",
+    "localizacao": [
+     -43.386975,
+     -21.738336
+    ],
+    "rumoAntes": 307,
+    "rumoDepois": 305,
+    "modificador": "straight"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "BR-267",
+   "distancia": 7244.2,
+   "duracao": 517.4,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.415596,
+     -21.7087
+    ],
+    "rumoAntes": 334,
+    "rumoDepois": 247,
+    "modificador": "left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "",
+   "distancia": 185.4,
+   "duracao": 14.8,
+   "manobra": {
+    "tipo": "off ramp",
+    "localizacao": [
+     -43.451691,
+     -21.701723
+    ],
+    "rumoAntes": 333,
+    "rumoDepois": 330,
+    "modificador": "slight left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rodovia Presidente Juscelino Kubitschek",
+   "ref": "BR-040; BR-267",
+   "distancia": 47,
+   "duracao": 3,
+   "manobra": {
+    "tipo": "merge",
+    "localizacao": [
+     -43.452546,
+     -21.701408
+    ],
+    "rumoAntes": 185,
+    "rumoDepois": 172,
+    "modificador": "slight right"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "BR-267",
+   "distancia": 28890.9,
+   "duracao": 1706.3,
+   "manobra": {
+    "tipo": "fork",
+    "localizacao": [
+     -43.4525,
+     -21.70183
+    ],
+    "rumoAntes": 172,
+    "rumoDepois": 174,
+    "modificador": "slight right"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rodovia Vital Brasil",
+   "ref": "",
+   "distancia": 16921.6,
+   "duracao": 962.7,
+   "manobra": {
+    "tipo": "new name",
+    "localizacao": [
+     -43.677301,
+     -21.794982
+    ],
+    "rumoAntes": 216,
+    "rumoDepois": 215,
+    "modificador": "straight"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "",
+   "distancia": 148.6,
+   "duracao": 14.5,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.807395,
+     -21.848391
+    ],
+    "rumoAntes": 288,
+    "rumoDepois": 341,
+    "modificador": "right"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua Benvindo de Paula",
+   "ref": "",
+   "distancia": 453.6,
+   "duracao": 40.8,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.807194,
+     -21.847152
+    ],
+    "rumoAntes": 337,
+    "rumoDepois": 53,
+    "modificador": "right"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "",
+   "distancia": 68.7,
+   "duracao": 6.7,
+   "manobra": {
+    "tipo": "roundabout",
+    "localizacao": [
+     -43.804529,
+     -21.843936
+    ],
+    "rumoAntes": 26,
+    "rumoDepois": 33,
+    "modificador": "straight",
+    "saida": 3
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "",
+   "distancia": 31,
+   "duracao": 2.8,
+   "manobra": {
+    "tipo": "exit roundabout",
+    "localizacao": [
+     -43.804799,
+     -21.843643
+    ],
+    "rumoAntes": 260,
+    "rumoDepois": 267,
+    "modificador": "straight",
+    "saida": 3
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua Joaquim Otaviano",
+   "ref": "LMG-871",
+   "distancia": 480.9,
+   "duracao": 44.9,
+   "manobra": {
+    "tipo": "new name",
+    "localizacao": [
+     -43.805099,
+     -21.843651
+    ],
+    "rumoAntes": 267,
+    "rumoDepois": 303,
+    "modificador": "slight right"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "Rua Niterói",
+   "ref": "",
+   "distancia": 297.6,
+   "duracao": 26.9,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.806853,
+     -21.840128
+    ],
+    "rumoAntes": 282,
+    "rumoDepois": 217,
+    "modificador": "left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "LMG-871",
+   "distancia": 5850.5,
+   "duracao": 527.6,
+   "manobra": {
+    "tipo": "new name",
+    "localizacao": [
+     -43.808299,
+     -21.838826
+    ],
+    "rumoAntes": 345,
+    "rumoDepois": 343,
+    "modificador": "straight"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "LMG-871",
+   "distancia": 750.5,
+   "duracao": 70.7,
+   "manobra": {
+    "tipo": "continue",
+    "localizacao": [
+     -43.825956,
+     -21.798019
+    ],
+    "rumoAntes": 320,
+    "rumoDepois": 264,
+    "modificador": "left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "LMG-871",
+   "distancia": 2090.1,
+   "duracao": 188.6,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.83223,
+     -21.796108
+    ],
+    "rumoAntes": 23,
+    "rumoDepois": 312,
+    "modificador": "left"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "LMG-871",
+   "distancia": 1964.1,
+   "duracao": 177,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.849841,
+     -21.791728
+    ],
+    "rumoAntes": 241,
+    "rumoDepois": 279,
+    "modificador": "slight right"
+   }
+  },
+  {
+   "trecho": 0,
+   "nome": "",
+   "ref": "LMG-871",
+   "distancia": 0,
+   "duracao": 0,
+   "manobra": {
+    "tipo": "arrive",
+    "localizacao": [
+     -43.865576,
+     -21.787827
+    ],
+    "rumoAntes": 290,
+    "rumoDepois": 0
+   }
+  },
+  {
+   "trecho": 1,
+   "nome": "",
+   "ref": "LMG-871",
+   "distancia": 796.5,
+   "duracao": 71.7,
+   "manobra": {
+    "tipo": "depart",
+    "localizacao": [
+     -43.865576,
+     -21.787827
+    ],
+    "rumoAntes": 0,
+    "rumoDepois": 291
+   }
+  },
+  {
+   "trecho": 1,
+   "nome": "",
+   "ref": "LMG-871",
+   "distancia": 50.7,
+   "duracao": 6.2,
+   "manobra": {
+    "tipo": "fork",
+    "localizacao": [
+     -43.872823,
+     -21.786485
+    ],
+    "rumoAntes": 281,
+    "rumoDepois": 284,
+    "modificador": "slight right"
+   }
+  },
+  {
+   "trecho": 1,
+   "nome": "",
+   "ref": "LMG-871",
+   "distancia": 6878.5,
+   "duracao": 621.9,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.873297,
+     -21.78637
+    ],
+    "rumoAntes": 285,
+    "rumoDepois": 9,
+    "modificador": "right"
+   }
+  },
+  {
+   "trecho": 1,
+   "nome": "",
+   "ref": "LMG-871",
+   "distancia": 4298.5,
+   "duracao": 392.4,
+   "manobra": {
+    "tipo": "continue",
+    "localizacao": [
+     -43.900925,
+     -21.743167
+    ],
+    "rumoAntes": 324,
+    "rumoDepois": 257,
+    "modificador": "left"
+   }
+  },
+  {
+   "trecho": 1,
+   "nome": "Rua Lava Pés",
+   "ref": "",
+   "distancia": 400.8,
+   "duracao": 37.9,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.924695,
+     -21.721141
+    ],
+    "rumoAntes": 352,
+    "rumoDepois": 260,
+    "modificador": "left"
+   }
+  },
+  {
+   "trecho": 1,
+   "nome": "Rua Revalino Carvalho da Fonseca",
+   "ref": "",
+   "distancia": 228.1,
+   "duracao": 33.9,
+   "manobra": {
+    "tipo": "turn",
+    "localizacao": [
+     -43.927717,
+     -21.719429
+    ],
+    "rumoAntes": 299,
+    "rumoDepois": 26,
+    "modificador": "right"
+   }
+  },
+  {
+   "trecho": 1,
+   "nome": "",
+   "ref": "",
+   "distancia": 90.2,
+   "duracao": 13,
+   "manobra": {
+    "tipo": "end of road",
+    "localizacao": [
+     -43.927419,
+     -21.717419
+    ],
+    "rumoAntes": 26,
+    "rumoDepois": 330,
+    "modificador": "left"
+   }
+  },
+  {
+   "trecho": 1,
+   "nome": "",
+   "ref": "",
+   "distancia": 0,
+   "duracao": 0,
+   "manobra": {
+    "tipo": "arrive",
+    "localizacao": [
+     -43.928103,
+     -21.716948
+    ],
+    "rumoAntes": 308,
+    "rumoDepois": 0
+   }
+  }
+ ]
+}
