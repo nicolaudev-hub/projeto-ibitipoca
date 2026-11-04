@@ -127,7 +127,7 @@
                 tileSize: manifesto.tamanhoTile,
                 zoomOffset: -1,
                 minZoom: 1,
-                maxZoom: 17,
+                maxZoom: 15,
                 maxNativeZoom: manifesto.zoomMax + 1,
                 bounds: cobertura,
                 attribution: manifesto.atribuicao

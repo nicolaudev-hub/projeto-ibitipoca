@@ -16,7 +16,7 @@
  */
 'use strict';
 
-const VERSAO_APP = '5';
+const VERSAO_APP = '6';
 const VERSAO_TILES = '5ca315088105b9b6';
 const PREFIXO_CACHE = 'ibitipoca-';
 const CACHE_APP = PREFIXO_CACHE + 'app-v' + VERSAO_APP + '-' + VERSAO_TILES;
