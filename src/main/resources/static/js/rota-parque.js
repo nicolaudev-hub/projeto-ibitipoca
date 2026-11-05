@@ -28,7 +28,9 @@
         nome: 'Portaria do Parque Estadual do Ibitipoca'
     });
 
-    const SERVIDOR_OSRM = 'https://router.project-osrm.org';
+        // OSRM próprio, publicado pelo Caddy no mesmo domínio do app
+        // (/osrm/route/v1/* -> osrm_server:5000). Mesmo HTTPS, sem CORS.
+        const SERVIDOR_OSRM = './osrm';
     const CHAVE_ARMAZENAMENTO = 'ibitipoca-rota-parque-v1';
     const TEMPO_LIMITE_MS = 20000;
     // Leitura do GPS mais antiga que isso não representa a posição atual.

@@ -16,7 +16,7 @@
  */
 'use strict';
 
-const VERSAO_APP = '6';
+const VERSAO_APP = '7';
 const VERSAO_TILES = '5ca315088105b9b6';
 const PREFIXO_CACHE = 'ibitipoca-';
 const CACHE_APP = PREFIXO_CACHE + 'app-v' + VERSAO_APP + '-' + VERSAO_TILES;
@@ -96,7 +96,8 @@ self.addEventListener('fetch', evento => {
 
     const url = new URL(requisicao.url);
     if (url.origin !== self.location.origin) return;
-
+    // Rotas do OSRM são calculadas na hora: nunca guardar nem servir do cache.
+    if (url.pathname.startsWith(BASE + 'osrm/')) return;
     if (requisicao.mode === 'navigate') {
         evento.respondWith(redePrimeiro(evento, url));
     } else if (url.pathname.startsWith(BASE + 'tiles/') && url.pathname.endsWith('.png')) {
