@@ -415,6 +415,12 @@ test('tiles: tile inexistente no servidor responde 404 e não é guardado', asyn
         undefined);
 });
 
+test('não intercepta as rotas do OSRM próprio (/osrm/)', () => {
+    const amb = criarAmbiente();
+    const caminho = '/osrm/route/v1/driving/-43.9,-21.7;-43.90,-21.71?steps=true';
+    assert.equal(amb.requisitar(caminho).resposta, undefined);
+});
+
 // ---- Requisições ignoradas ----
 
 test('não intercepta POST nem outras origens', () => {

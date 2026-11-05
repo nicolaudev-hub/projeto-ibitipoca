@@ -136,10 +136,12 @@ test('ativar: origem é o GPS atual e o destino é a portaria', async () => {
     assert.equal(e.estado, 'pronta');
     assert.equal(e.recalculadaAgora, true);
     assert.equal(amb.chamadas.length, 1);
-    const url = new URL(amb.chamadas[0]);
-    assert.equal(url.origin, 'https://router.project-osrm.org');
-    assert.equal(url.pathname,
-        '/route/v1/driving/-43.928103,-21.716948;-43.9030178,-21.7118892');
+        // URL relativa: o OSRM próprio responde no mesmo domínio do app.
+        assert.ok(amb.chamadas[0].startsWith('./osrm/route/v1/driving/'));
+        const url = new URL(amb.chamadas[0], 'https://app.exemplo/');
+        assert.equal(url.origin, 'https://app.exemplo');
+        assert.equal(url.pathname,
+            '/osrm/route/v1/driving/-43.928103,-21.716948;-43.9030178,-21.7118892');
     assert.equal(url.searchParams.get('steps'), 'true');
     assert.equal(e.rota.origem.latitude, POSICAO_CHALE.latitude);
     assert.ok(e.rota.etapas.length > 2);
