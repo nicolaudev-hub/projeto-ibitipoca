@@ -1,17 +1,18 @@
 /**
- * Projeto Ibitipoca — ligação do visual novo (novo.html) à navegação
+ * OffGrid — ligação da interface (index.html) à navegação
  *
- * Mesma lógica do script do index.html, adaptada ao DOM novo:
  * - um único mapa Leaflet, com os tiles locais de ./tiles/;
- * - um único watchPosition, o de NavegacaoGPS (navegacao.js);
- * - instruções (instrucoes.js), rota do parque (rota-parque.js),
- *   Circuito das Águas (circuito-aguas.js),
- *   download offline (download-mapa.js) e Service Worker (registro-sw.js).
+ * - um único watchPosition, o de NavegacaoGPS (navegacao.js), iniciado sem
+ *   rota; a rota até o destino entra com definirRota() quando é calculada;
+ * - destino livre: busca (busca-destino.js) ou toque no mapa, rota da
+ *   posição atual até o destino (rota-destino.js) e instruções
+ *   (instrucoes.js);
+ * - download offline (download-mapa.js) e Service Worker (registro-sw.js).
  *
- * Dos módulos do visual novo usa apenas theme.js, sidebar.js e
- * simulation.js, que dependem de App.dom e App.estado preenchidos aqui.
- * app.js, gps.js e route.js não são carregados: criariam outro mapa,
- * outro GPS e usariam o servidor de tiles externo definido em config.js.
+ * Dos módulos do visual usa apenas theme.js, sidebar.js e simulation.js,
+ * que dependem de App.dom e App.estado preenchidos aqui. app.js, gps.js e
+ * route.js não são carregados: criariam outro mapa, outro GPS e usariam o
+ * servidor de tiles externo definido em config.js.
  */
 (function () {
     'use strict';
@@ -86,16 +87,6 @@
             });
         }).observe(mapa.getContainer());
     }
-
-    // Ícone com URLs relativas, sem L.Icon.Default (que duplicava o caminho).
-    const iconeMarcador = L.icon({
-        iconUrl: './leaflet/images/marker-icon.png',
-        shadowUrl: './leaflet/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-    });
 
     let tilesCarregados = false;
     let falhasTiles = 0;
@@ -260,17 +251,27 @@
     const stepsTitulo = $('steps-titulo');
 
     let ultimaLeituraGPS = null;
-    let acompanhadorPrincipal = null;
-    let preparoPrincipal = null;
-    let acompanhadorParque = null;
-    let preparoParque = null;
-    let rotaDoAcompanhadorParque = null;
-    let motivoSemInstrucoes = 'Carregando instruções...';
+    let navegacaoGPS = null;
+    let acompanhadorDestino = null;
+    let preparoDestino = null;
+    let rotaDoAcompanhadorDestino = null;
+    let motivoSemInstrucoes = 'Escolha um destino para ver as instruções.';
     let preparoDaLista = null;
     let indiceDestacado = -1;
 
+    // As instruções seguem a rota até o destino escolhido, quando existe.
     function acompanhadorAtivo() {
-        return acompanhadorParque || acompanhadorPrincipal;
+        return acompanhadorDestino;
+    }
+
+    function preparoAtivo() {
+        return acompanhadorDestino ? preparoDestino : null;
+    }
+
+    function tituloInstrucoes() {
+        return acompanhadorDestino
+            ? 'Instruções até ' + rotaDoAcompanhadorDestino.destino.nome
+            : 'Sem destino definido';
     }
 
     function maiuscula(texto) {
@@ -279,7 +280,7 @@
 
     // Lista das manobras da rota ativa; tocar numa delas mostra o ponto.
     function montarLista() {
-        const preparo = acompanhadorParque ? preparoParque : preparoPrincipal;
+        const preparo = preparoAtivo();
         if (preparo === preparoDaLista) return;
         preparoDaLista = preparo;
         indiceDestacado = -1;
@@ -291,9 +292,7 @@
             return;
         }
 
-        stepsTitulo.textContent = acompanhadorParque
-            ? 'Instruções até a portaria do parque'
-            : 'Instruções até o chalé';
+        stepsTitulo.textContent = tituloInstrucoes();
 
         preparo.manobras.forEach((manobra, i) => {
             const [lon, lat] = manobra.etapa.manobra.localizacao;
@@ -353,11 +352,8 @@
     }
 
     function mostrarInstrucoes(r) {
-        const parque = acompanhadorParque !== null;
-        painelInstrucoes.classList.toggle('parque', parque);
-        instrDestino.textContent = parque
-            ? 'Instruções até a portaria do parque'
-            : 'Instruções até o chalé';
+        painelInstrucoes.classList.toggle('destino', acompanhadorDestino !== null);
+        instrDestino.textContent = tituloInstrucoes();
         montarLista();
 
         if (!r) {
@@ -402,42 +398,19 @@
         }
     }
 
-    // Etapas do OSRM guardadas à parte; a rota principal não é alterada.
-    const etapasPrincipal = fetch('./data/etapas_rota_principal.json')
-        .then(resposta => {
-            if (!resposta.ok) throw new Error('arquivo de etapas indisponível');
-            return resposta.json();
-        })
-        .catch(erro => ({ erro: erro }));
+    // ---- Destino livre: rota da posição atual até o destino escolhido ----
+    const formBusca = $('destino-busca');
+    const campoBusca = $('destino-texto');
+    const botaoBuscar = $('destino-buscar');
+    const buscaEstado = $('destino-busca-estado');
+    const listaResultados = $('destino-resultados');
+    const botaoEscolherNoMapa = $('destino-mapa');
+    const destinoEstado = $('destino-estado');
+    const destinoDetalhe = $('destino-detalhe');
+    const destinoCalcular = $('destino-calcular');
+    const destinoLimpar = $('destino-limpar');
 
-    function prepararInstrucoesPrincipal(rota, coordenadas) {
-        etapasPrincipal.then(dados => {
-            if (dados.erro || dados.formato !== 'ibitipoca-etapas-v1') {
-                throw new Error('Instruções indisponíveis: arquivo de etapas não carregado.');
-            }
-            // Etapas geradas para outra rota não são usadas.
-            if (Math.abs(dados.rota.distancia - rota.distance) > 1) {
-                throw new Error('Instruções indisponíveis: as etapas são de outra rota.');
-            }
-            const preparo = window.InstrucoesNavegacao.preparar(dados.etapas, coordenadas);
-            if (!preparo.valido) throw new Error('Instruções indisponíveis: ' + preparo.motivo);
-            preparoPrincipal = preparo;
-            acompanhadorPrincipal = window.InstrucoesNavegacao.criarAcompanhador(preparo);
-            alimentarInstrucoes();
-        }).catch(erro => {
-            console.warn(erro);
-            motivoSemInstrucoes = erro.message;
-            alimentarInstrucoes();
-        });
-    }
-
-    // ---- Rota opcional até o parque ----
-    const parqueEstado = $('parque-estado');
-    const parqueDetalhe = $('parque-detalhe');
-    const parqueCalcular = $('parque-calcular');
-    const opcoesParque = document.querySelectorAll('input[name="rota-parque"]');
-
-    function descreverRotaParque(rota, recalculadaAgora) {
+    function descreverRota(rota, recalculadaAgora) {
         const quando = new Date(rota.criadaEm).toLocaleString('pt-BR', {
             day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
         });
@@ -461,40 +434,54 @@
         return texto;
     }
 
-    function mostrarParque(e) {
-        const problema = ['erro', 'sem-rede', 'aguardando-gps'].includes(e.estado);
-        parqueEstado.classList.toggle('problema', problema);
-        parqueCalcular.hidden = !e.ativa;
-        parqueCalcular.disabled = e.estado === 'calculando';
+    function mostrarDestino(e) {
+        const problema = ['erro', 'sem-rede', 'aguardando-gps', 'fora-da-cobertura']
+            .includes(e.estado);
+        destinoEstado.classList.toggle('problema', problema);
+        destinoEstado.textContent = e.mensagem;
+        destinoDetalhe.textContent = e.rota
+            ? descreverRota(e.rota, e.estado === 'pronta' && e.recalculadaAgora)
+            : '';
+        destinoCalcular.hidden = !e.destino;
+        destinoCalcular.disabled = e.estado === 'calculando';
+        destinoCalcular.textContent = e.rota ? 'Recalcular rota' : 'Calcular rota';
+        destinoLimpar.hidden = !e.destino;
 
-        if (!e.ativa) {
-            parqueEstado.textContent = '';
-            parqueDetalhe.textContent = '';
-        } else {
-            parqueEstado.textContent = e.mensagem;
-            parqueDetalhe.textContent = e.rota
-                ? descreverRotaParque(e.rota, e.estado === 'pronta' && e.recalculadaAgora)
-                : '';
+        // Instruções, cartões, Simular e o alerta de desvio seguem a rota atual.
+        const rota = e.rota || null;
+        if (rota !== rotaDoAcompanhadorDestino) {
+            rotaDoAcompanhadorDestino = rota;
+            acompanhadorDestino = null;
+            preparoDestino = null;
+            if (App.sim.timer) App.sim.parar();
+            const coordenadas = rota ? rota.coordenadas.map(([lon, lat]) => [lat, lon]) : [];
+            App.estado.pontos = coordenadas;
+            if (rota) {
+                preparoDestino = window.InstrucoesNavegacao.preparar(rota.etapas, coordenadas);
+                acompanhadorDestino = window.InstrucoesNavegacao.criarAcompanhador(preparoDestino);
+            }
+            if (navegacaoGPS) navegacaoGPS.definirRota(rota ? coordenadas : null);
+            App.dom.distancia.textContent = rota ? App.util.km(rota.distancia) : '—';
+            App.dom.tempo.textContent = rota ? App.util.tempo(rota.duracao) : '—';
+            mensagemRota = rota
+                ? 'Rota até ' + rota.destino.nome + ': ' + App.dom.distancia.textContent +
+                    ' · ' + App.dom.tempo.textContent + ' estimados.'
+                : 'Escolha um destino pela busca ou tocando no mapa.';
+            atualizarStatus();
+            alimentarInstrucoes();
         }
 
-        // As instruções seguem a rota do parque enquanto ela estiver exibida.
-        const rota = e.ativa ? e.rota : null;
-        if (rota !== rotaDoAcompanhadorParque) {
-            rotaDoAcompanhadorParque = rota;
-            acompanhadorParque = null;
-            preparoParque = null;
-            if (rota) {
-                const coordenadasParque = rota.coordenadas.map(([lon, lat]) => [lat, lon]);
-                preparoParque = window.InstrucoesNavegacao.preparar(rota.etapas, coordenadasParque);
-                acompanhadorParque = window.InstrucoesNavegacao.criarAcompanhador(preparoParque);
-            }
-            alimentarInstrucoes();
+        // Logo após calcular, mostra o trajeto inteiro: o mapa para de seguir
+        // o GPS até a pessoa tocar em "Centralizar" (ou "Localização").
+        if (e.estado === 'pronta' && e.recalculadaAgora && navegacaoGPS) {
+            navegacaoGPS.pararDeSeguir();
         }
     }
 
-    let rotaParque = null;
+    let rotaDestino = null;
+    let buscaDestino = null;
     try {
-        rotaParque = window.RotaParque.criar({
+        rotaDestino = window.RotaDestino.criar({
             mapa: mapa,
             obterPosicao: () => ultimaLeituraGPS && {
                 latitude: ultimaLeituraGPS.latitude,
@@ -502,51 +489,100 @@
                 precisao: ultimaLeituraGPS.precisao,
                 timestamp: ultimaLeituraGPS.recebidaEm
             },
-            aoMudar: mostrarParque
+            aoMudar: mostrarDestino
         });
-    } catch (erroParque) {
-        console.error('Rota do parque indisponível:', erroParque);
-        parqueEstado.textContent = 'Rota do parque indisponível nesta página.';
+        buscaDestino = window.BuscaDestino.criar();
+    } catch (erroDestino) {
+        console.error('Escolha de destino indisponível:', erroDestino);
+        destinoEstado.textContent = 'Escolha de destino indisponível nesta página.';
     }
 
-    opcoesParque.forEach(opcao => opcao.addEventListener('change', () => {
-        if (!rotaParque || !opcao.checked) return;
-        if (opcao.value === 'sim') rotaParque.ativar();
-        else rotaParque.desativar();
-    }));
+    function escolherDestino(destino) {
+        if (!rotaDestino) return;
+        listaResultados.hidden = true;
+        listaResultados.textContent = '';
+        buscaEstado.textContent = '';
+        rotaDestino.definirDestino(destino);
+    }
 
-    parqueCalcular.addEventListener('click', () => {
-        if (rotaParque) rotaParque.calcular();
+    function mostrarResultados(r) {
+        buscaEstado.textContent = r.mensagem;
+        buscaEstado.classList.toggle('problema', r.estado === 'erro' || r.estado === 'sem-rede');
+        listaResultados.textContent = '';
+        r.resultados.forEach(resultado => {
+            const item = document.createElement('li');
+            const botao = document.createElement('button');
+            botao.type = 'button';
+            botao.className = 'destino-resultado';
+            const nome = document.createElement('span');
+            nome.className = 'destino-resultado__nome';
+            nome.textContent = resultado.nome;
+            const descricao = document.createElement('span');
+            descricao.className = 'destino-resultado__descricao';
+            descricao.textContent = resultado.descricao;
+            botao.append(nome, descricao);
+            botao.addEventListener('click', () => escolherDestino(resultado));
+            item.appendChild(botao);
+            listaResultados.appendChild(item);
+        });
+        listaResultados.hidden = r.resultados.length === 0;
+    }
+
+    formBusca.addEventListener('submit', evento => {
+        evento.preventDefault();
+        if (!buscaDestino) return;
+        botaoBuscar.disabled = true;
+        buscaEstado.classList.remove('problema');
+        buscaEstado.textContent = 'Buscando...';
+        buscaDestino.buscar(campoBusca.value)
+            .then(mostrarResultados)
+            .finally(() => { botaoBuscar.disabled = false; });
     });
 
-    // ---- Circuito das Águas (opcional) ----
-    const circuitoEstado = $('circuito-estado');
-    const opcoesCircuito = document.querySelectorAll('input[name="circuito-aguas"]');
-
-    let circuitoAguas = null;
-    try {
-        circuitoAguas = window.CircuitoAguas.criar({
-            mapa: mapa,
-            aoMudar: e => {
-                circuitoEstado.textContent = e.mensagem;
-                circuitoEstado.classList.toggle('problema', e.estado === 'erro');
-            }
-        });
-    } catch (erroCircuito) {
-        console.error('Circuito das Águas indisponível:', erroCircuito);
-        circuitoEstado.textContent = 'Circuito das Águas indisponível nesta página.';
+    // "Escolher no mapa": o próximo toque no mapa define o destino.
+    let escolhendoNoMapa = false;
+    function definirModoMapa(ligado) {
+        escolhendoNoMapa = ligado;
+        botaoEscolherNoMapa.setAttribute('aria-pressed', String(ligado));
+        botaoEscolherNoMapa.classList.toggle('btn--active', ligado);
+        botaoEscolherNoMapa.textContent = ligado
+            ? 'Toque no mapa para marcar o destino (cancelar)'
+            : 'Escolher no mapa';
+        document.body.classList.toggle('escolhendo-destino', ligado);
     }
 
-    opcoesCircuito.forEach(opcao => opcao.addEventListener('change', () => {
-        if (!circuitoAguas || !opcao.checked) return;
-        if (opcao.value === 'sim') circuitoAguas.ativar();
-        else circuitoAguas.desativar();
-    }));
+    botaoEscolherNoMapa.addEventListener('click', () => definirModoMapa(!escolhendoNoMapa));
+
+    mapa.on('click', evento => {
+        if (!escolhendoNoMapa) return;
+        definirModoMapa(false);
+        escolherDestino({
+            latitude: evento.latlng.lat,
+            longitude: evento.latlng.lng,
+            nome: 'Ponto escolhido no mapa'
+        });
+    });
+
+    destinoCalcular.addEventListener('click', () => {
+        if (rotaDestino) rotaDestino.calcular();
+    });
+
+    destinoLimpar.addEventListener('click', () => {
+        if (rotaDestino) rotaDestino.limpar();
+        definirModoMapa(false);
+    });
 
     // ---- Controles do visual novo ----
     App.tema.init();
     App.sidebar.init();
-    App.dom.btnSim.addEventListener('click', () => App.sim.toggle());
+    App.dom.btnSim.addEventListener('click', () => {
+        if (!App.estado.pontos.length) {
+            mensagemRota = 'Calcule uma rota até um destino para simular o percurso.';
+            atualizarStatus();
+            return;
+        }
+        App.sim.toggle();
+    });
 
     // "Localização" aciona o botão "Centralizar" do próprio navegacao.js,
     // que retoma o acompanhamento; não abre outro GPS.
@@ -555,115 +591,67 @@
         if (centralizar) centralizar.click();
     });
 
-    // ---- Rota principal e GPS ----
-    fetch('./data/rota_navegacao_offline.json')
-        .then(resposta => {
-            if (!resposta.ok) {
-                throw new Error('Não foi possível carregar o arquivo da rota.');
+    // ---- GPS (único watchPosition, o de navegacao.js) ----
+    // Começa sem rota: mostra a posição e serve de origem para o cálculo.
+    // A rota entra depois, com definirRota(), quando o destino é calculado.
+    const cartaoGPS = $('cartao-gps');
+    try {
+        navegacaoGPS = window.NavegacaoGPS.iniciar({
+            mapa: mapa,
+            aoAtualizar: function (dados) {
+                const mensagens = {
+                    aguardando: 'Aguardando permissão e sinal...',
+                    indisponivel: 'GPS indisponível neste navegador.',
+                    erro: dados.mensagem || 'Erro ao obter localização.',
+                    ativo: dados.precisaoInsuficiente
+                        ? 'GPS ativo (precisão baixa)'
+                        : 'GPS ativo',
+                    desvio: 'ATENÇÃO: possível desvio da rota!'
+                };
+
+                let texto = mensagens[dados.estado] ||
+                    dados.mensagem ||
+                    'Estado GPS desconhecido';
+                if (dados.estado === 'indisponivel' && dados.mensagem) {
+                    texto = dados.mensagem;
+                }
+                if (typeof dados.precisaoMetros === 'number') {
+                    texto += ' | Precisão: ±' + Math.round(dados.precisaoMetros) + ' m';
+                }
+                if (typeof dados.distanciaRotaMetros === 'number') {
+                    texto += ' | Distância da rota: ' +
+                        Math.round(dados.distanciaRotaMetros) + ' m';
+                }
+
+                App.dom.gps.textContent = texto;
+                cartaoGPS.classList.toggle('alerta', dados.estado === 'desvio');
+                App.dom.gps.setAttribute('aria-live',
+                    dados.estado === 'desvio' || dados.estado === 'erro'
+                        ? 'assertive' : 'polite');
+
+                if (typeof dados.latitude === 'number') {
+                    ultimaLeituraGPS = {
+                        latitude: dados.latitude,
+                        longitude: dados.longitude,
+                        precisao: dados.precisaoMetros,
+                        timestamp: dados.timestamp,
+                        recebidaEm: Date.now()
+                    };
+                    alimentarInstrucoes();
+                } else if (dados.estado === 'erro' && acompanhadorAtivo()) {
+                    mostrarInstrucoes(acompanhadorAtivo().marcarSemSinal());
+                }
             }
-            return resposta.json();
-        })
-        .then(dados => {
-            if (dados.code !== 'Ok' || !dados.routes?.length) {
-                throw new Error('O arquivo não contém uma rota válida.');
-            }
-
-            const rota = dados.routes[0];
-
-            if (!rota.geometry?.coordinates?.length) {
-                throw new Error('A rota não possui coordenadas.');
-            }
-
-            // OSRM: [longitude, latitude]. Leaflet: [latitude, longitude].
-            const coordenadas = rota.geometry.coordinates.map(
-                ([longitude, latitude]) => [latitude, longitude]
-            );
-            App.estado.pontos = coordenadas;
-
-            const linhaRota = L.polyline(coordenadas, {
-                color: App.mapa.corRota(),
-                weight: 5,
-                opacity: 0.95
-            }).addTo(mapa);
-            // theme.js recolore App.rota.linha ao trocar o tema.
-            App.rota = { linha: linhaRota };
-
-            L.marker(coordenadas[0], { icon: iconeMarcador })
-                .addTo(mapa)
-                .bindPopup('Início da rota');
-            L.marker(coordenadas[coordenadas.length - 1], { icon: iconeMarcador })
-                .addTo(mapa)
-                .bindPopup('Fim da rota');
-
-            mapa.fitBounds(linhaRota.getBounds(), { padding: [20, 20], maxZoom: 13 });
-
-            App.dom.distancia.textContent = App.util.km(rota.distance);
-            App.dom.tempo.textContent = App.util.tempo(rota.duration);
-            mensagemRota = 'Rota carregada: ' + App.dom.distancia.textContent +
-                ' · ' + App.dom.tempo.textContent + ' estimados pelo OSRM.';
-            atualizarStatus();
-
-            prepararInstrucoesPrincipal(rota, coordenadas);
-
-            const cartaoGPS = $('cartao-gps');
-            try {
-                window.NavegacaoGPS.iniciar({
-                    mapa: mapa,
-                    coordenadas: coordenadas,
-                    aoAtualizar: function (dados) {
-                        const mensagens = {
-                            aguardando: 'Aguardando permissão e sinal...',
-                            indisponivel: 'GPS indisponível neste navegador.',
-                            erro: dados.mensagem || 'Erro ao obter localização.',
-                            ativo: dados.precisaoInsuficiente
-                                ? 'GPS ativo (precisão baixa)'
-                                : 'GPS ativo',
-                            desvio: 'ATENÇÃO: possível desvio da rota!'
-                        };
-
-                        let texto = mensagens[dados.estado] ||
-                            dados.mensagem ||
-                            'Estado GPS desconhecido';
-                        if (dados.estado === 'indisponivel' && dados.mensagem) {
-                            texto = dados.mensagem;
-                        }
-                        if (typeof dados.precisaoMetros === 'number') {
-                            texto += ' | Precisão: ±' + Math.round(dados.precisaoMetros) + ' m';
-                        }
-                        if (typeof dados.distanciaRotaMetros === 'number') {
-                            texto += ' | Distância da rota: ' +
-                                Math.round(dados.distanciaRotaMetros) + ' m';
-                        }
-
-                        App.dom.gps.textContent = texto;
-                        cartaoGPS.classList.toggle('alerta', dados.estado === 'desvio');
-                        App.dom.gps.setAttribute('aria-live',
-                            dados.estado === 'desvio' || dados.estado === 'erro'
-                                ? 'assertive' : 'polite');
-
-                        if (typeof dados.latitude === 'number') {
-                            ultimaLeituraGPS = {
-                                latitude: dados.latitude,
-                                longitude: dados.longitude,
-                                precisao: dados.precisaoMetros,
-                                timestamp: dados.timestamp,
-                                recebidaEm: Date.now()
-                            };
-                            alimentarInstrucoes();
-                        } else if (dados.estado === 'erro' && acompanhadorAtivo()) {
-                            mostrarInstrucoes(acompanhadorAtivo().marcarSemSinal());
-                        }
-                    }
-                });
-            } catch (erroGPS) {
-                App.dom.gps.textContent = 'Não foi possível iniciar o GPS: ' + erroGPS.message;
-                console.error('Falha ao iniciar o GPS:', erroGPS);
-            }
-        })
-        .catch(erro => {
-            console.error('Erro ao carregar a rota:', erro);
-            mensagemRota = 'Erro ao carregar a rota: ' + erro.message +
-                ' Verifique se a aplicação Java está em execução.';
-            atualizarStatus(true);
         });
+    } catch (erroGPS) {
+        App.dom.gps.textContent = 'Não foi possível iniciar o GPS: ' + erroGPS.message;
+        console.error('Falha ao iniciar o GPS:', erroGPS);
+    }
+
+    // Sem internet, a última rota calculada continua disponível.
+    if (rotaDestino) rotaDestino.restaurar();
+    if (!rotaDestino || !rotaDestino.rotaAtual()) {
+        mensagemRota = 'Escolha um destino pela busca ou tocando no mapa.';
+        atualizarStatus();
+    }
 })();

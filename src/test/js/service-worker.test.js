@@ -172,10 +172,12 @@ test('recursos: todos os arquivos pré-armazenados existem em static/', () => {
 test('recursos: tudo que o index.html carrega localmente está no pré-cache', () => {
     const recursos = criarAmbiente().constante('RECURSOS_APP');
     const html = ler('index.html').toString('utf8');
+    const app = ler(path.join('js', 'novo-app.js')).toString('utf8');
     const usados = new Set();
     for (const m of html.matchAll(/(?:src|href)="(\.\/[^"]+)"/g)) usados.add(m[1]);
-    for (const m of html.matchAll(/'(\.\/[^'{}]+\.(?:png|json|js|css))'/g)) usados.add(m[1]);
-    assert.ok(usados.size >= 6, 'deveria encontrar os recursos do index.html');
+    // Recursos que a ligação da interface carrega por fetch/Leaflet.
+    for (const m of app.matchAll(/'(\.\/[^'{}]+\.(?:png|json|js|css))'/g)) usados.add(m[1]);
+    assert.ok(usados.size >= 15, 'deveria encontrar os recursos do index.html');
     const faltando = [...usados].filter(u => !recursos.includes(u));
     assert.deepEqual(faltando, []);
 });
@@ -293,46 +295,17 @@ test('navegação para outro caminho não substitui a cópia da página', async 
     assert.ok(Buffer.from(await pagina.arrayBuffer()).equals(ler('index.html')));
 });
 
-// ---- Página de testes novo.html ----
+// ---- Link antigo /novo.html ----
 
-test('novo.html: tudo que a página carrega localmente está no pré-cache', () => {
+test('novo.html antigo: só redireciona para a página principal, fora do pré-cache', () => {
     const recursos = criarAmbiente().constante('RECURSOS_APP');
-    const html = ler('novo.html').toString('utf8');
-    const usados = new Set();
-    for (const m of html.matchAll(/(?:src|href)="(\.\/[^"]+)"/g)) usados.add(m[1]);
-    assert.ok(usados.size >= 15, 'deveria encontrar os recursos do novo.html');
-    const faltando = [...usados].filter(u => !recursos.includes(u));
-    assert.deepEqual(faltando, []);
-    assert.ok(recursos.includes('./novo.html'));
+    assert.ok(!recursos.includes('./novo.html'));
+    assert.match(ler('novo.html').toString('utf8'), /http-equiv="refresh" content="0; url=\.\/"/);
 });
 
-test('novo.html offline: devolve a própria cópia, não a do index.html', async () => {
+test('link antigo /novo.html sem conexão: usa a cópia do index.html', async () => {
     const amb = criarAmbiente();
     await amb.instalarEAtivar();
-    amb.opcoes.rede = 'offline';
-    const nova = await amb.buscar('/novo.html', { mode: 'navigate' });
-    assert.ok(Buffer.from(await nova.arrayBuffer()).equals(ler('novo.html')));
-    const principal = await amb.buscar('/', { mode: 'navigate' });
-    assert.ok(Buffer.from(await principal.arrayBuffer()).equals(ler('index.html')));
-});
-
-test('novo.html online: atualiza só a própria cópia', async () => {
-    const amb = criarAmbiente();
-    await amb.instalarEAtivar();
-    amb.opcoes.respostas['/novo.html'] = () => new Response('<p>novo atualizado</p>', { status: 200 });
-    await amb.buscar('/novo.html', { mode: 'navigate' });
-    amb.opcoes.rede = 'offline';
-    assert.equal(await (await amb.buscar('/novo.html', { mode: 'navigate' })).text(),
-        '<p>novo atualizado</p>');
-    const principal = await amb.buscar('/', { mode: 'navigate' });
-    assert.ok(Buffer.from(await principal.arrayBuffer()).equals(ler('index.html')));
-});
-
-test('novo.html offline sem cópia própria: usa a do index.html', async () => {
-    const amb = criarAmbiente();
-    await amb.instalarEAtivar();
-    const cache = amb.armazenamento.get(amb.constante('CACHE_APP'));
-    cache.itens.delete(amb.constante('URL_PAGINA_NOVA'));
     amb.opcoes.rede = 'offline';
     const resposta = await amb.buscar('/novo.html', { mode: 'navigate' });
     assert.ok(Buffer.from(await resposta.arrayBuffer()).equals(ler('index.html')));
@@ -346,7 +319,7 @@ test('recursos do app: vêm do cache sem acessar a rede', async () => {
     amb.opcoes.rede = 'offline';
     amb.chamadasRede.length = 0;
     for (const recurso of ['/js/navegacao.js', '/leaflet/leaflet.js', '/leaflet/leaflet.css',
-        '/data/rota_navegacao_offline.json', '/tiles/manifesto.json']) {
+        '/js/rota-destino.js', '/tiles/manifesto.json']) {
         const resposta = await amb.buscar(recurso);
         assert.equal(resposta.status, 200, recurso);
         assert.ok(Buffer.from(await resposta.arrayBuffer()).equals(ler(recurso)), recurso);
@@ -498,7 +471,7 @@ test('registro: sucesso registra ./sw.js e aguarda ficar pronto', async () => {
 test('index.html: carrega o registro antes do script principal', () => {
     const html = ler('index.html').toString('utf8');
     const registro = html.indexOf('<script src="./js/registro-sw.js"></script>');
-    const principal = html.indexOf('<script>');
+    const principal = html.indexOf('<script src="./js/novo-app.js"></script>');
     assert.ok(registro > 0 && registro < principal);
-    assert.match(html, /RegistroSW\.registrar\(/);
+    assert.match(ler(path.join('js', 'novo-app.js')).toString('utf8'), /RegistroSW\.registrar\(/);
 });

@@ -1,4 +1,4 @@
-// Testes da página de testes do visual novo (novo.html + js/novo-app.js).
+// Testes da interface principal (index.html + js/novo-app.js).
 // Executar na raiz do projeto: node --test src/test/js/
 'use strict';
 
@@ -10,13 +10,13 @@ const path = require('node:path');
 const STATIC = path.join(__dirname, '..', '..', 'main', 'resources', 'static');
 const ler = arquivo => fs.readFileSync(path.join(STATIC, arquivo), 'utf8');
 
-const HTML = ler('novo.html');
+const HTML = ler('index.html');
 const APP = ler(path.join('js', 'novo-app.js'));
 const scripts = [...HTML.matchAll(/<script src="\.\/([^"]+)"><\/script>/g)].map(m => m[1]);
 
-test('novo.html: carrega os módulos de navegação testados', () => {
-    for (const modulo of ['js/navegacao.js', 'js/instrucoes.js', 'js/rota-parque.js',
-        'js/registro-sw.js', 'js/download-mapa.js']) {
+test('index.html: carrega os módulos de navegação testados', () => {
+    for (const modulo of ['js/navegacao.js', 'js/instrucoes.js', 'js/rota-destino.js',
+        'js/busca-destino.js', 'js/registro-sw.js', 'js/download-mapa.js']) {
         assert.ok(scripts.includes(modulo), modulo);
     }
     // Leaflet primeiro; a ligação por último.
@@ -24,19 +24,19 @@ test('novo.html: carrega os módulos de navegação testados', () => {
     assert.equal(scripts[scripts.length - 1], 'js/novo-app.js');
 });
 
-test('novo.html: não carrega os scripts que criam outro mapa ou outro GPS', () => {
+test('index.html: não carrega os scripts que criam outro mapa ou outro GPS', () => {
     for (const proibido of ['js/app.js', 'js/gps.js', 'js/route.js']) {
         assert.ok(!scripts.includes(proibido), proibido);
     }
 });
 
-test('novo.html: todos os scripts e estilos existem em static/', () => {
+test('index.html: todos os scripts e estilos existem em static/', () => {
     const locais = [...HTML.matchAll(/(?:src|href)="\.\/([^"]+)"/g)].map(m => m[1]);
     const ausentes = locais.filter(f => !fs.existsSync(path.join(STATIC, f)));
     assert.deepEqual(ausentes, []);
 });
 
-test('novo.html: sem tiles de localhost:8081 nem recursos externos obrigatórios', () => {
+test('index.html: sem tiles de localhost:8081 nem recursos externos obrigatórios', () => {
     // config.js (do visual novo) ainda define App.CONFIG.tiles com
     // localhost:8081, mas só App.mapa.criar() o lia — e ele não é chamado.
     for (const s of scripts.filter(s => s.startsWith('js/') && s !== 'js/config.js')) {
@@ -66,24 +66,37 @@ test('novo-app.js: não dispara eventos artificiais do Leaflet', () => {
     assert.doesNotMatch(APP, /\.fire\(/);
 });
 
-test('novo.html: tem todos os elementos usados por novo-app.js e pelos módulos', () => {
+test('index.html: tem todos os elementos usados por novo-app.js e pelos módulos', () => {
     const ids = new Set([...APP.matchAll(/\$\('([\w-]+)'\)/g)].map(m => m[1]));
     ids.add('mapa');
     assert.ok(ids.size > 25, 'deveria encontrar os IDs usados');
     for (const id of ids) {
         assert.match(HTML, new RegExp('id="' + id + '"'), id);
     }
-    // Elementos exigidos pelo download do mapa e pela rota do parque.
+    // Elementos exigidos pelo download do mapa e pela escolha de destino.
     for (const id of ['offline-estado', 'offline-progresso', 'offline-detalhe',
-        'offline-baixar', 'offline-cancelar', 'parque-estado', 'parque-calcular',
+        'offline-baixar', 'offline-cancelar', 'destino-busca', 'destino-texto',
+        'destino-resultados', 'destino-mapa', 'destino-calcular', 'destino-limpar',
         'cartao-gps', 'painel-instrucoes']) {
         assert.match(HTML, new RegExp('id="' + id + '"'), id);
     }
-    assert.match(HTML, /name="rota-parque" value="nao" checked/);
-    assert.doesNotMatch(HTML, /value="sim" checked/);
 });
 
-test('novo.html: IDs únicos', () => {
+test('sem trajetos fixos: só a rota até o destino escolhido', () => {
+    for (const fixo of ['js/rota-parque.js', 'js/circuito-aguas.js']) {
+        assert.ok(!scripts.includes(fixo), fixo);
+        assert.ok(!fs.existsSync(path.join(STATIC, fixo)), fixo);
+    }
+    assert.doesNotMatch(APP, /rota_navegacao_offline|etapas_rota_principal|circuito_aguas/);
+    assert.doesNotMatch(APP, /RotaParque|CircuitoAguas/);
+    assert.doesNotMatch(HTML, /name="rota-parque"|name="circuito-aguas"/);
+    assert.ok(!fs.existsSync(path.join(STATIC, 'data')), 'pasta data/ não deveria existir');
+    // O GPS começa sem rota; a rota do destino entra com definirRota().
+    assert.match(APP, /NavegacaoGPS\.iniciar\(\{\s*mapa: mapa,\s*aoAtualizar/);
+    assert.match(APP, /navegacaoGPS\.definirRota\(/);
+});
+
+test('index.html: IDs únicos', () => {
     const ids = [...HTML.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
     const repetidos = ids.filter((id, i) => ids.indexOf(id) !== i);
     assert.deepEqual(repetidos, []);
