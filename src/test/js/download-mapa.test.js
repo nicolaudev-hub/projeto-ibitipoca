@@ -387,11 +387,12 @@ test('integração: grava no mesmo cache de tiles que o sw.js usa', () => {
 
 test('index.html: carrega o módulo e tem os controles do download', () => {
     const html = fs.readFileSync(path.join(STATIC, 'index.html'), 'utf8');
+    const app = fs.readFileSync(path.join(STATIC, 'js', 'novo-app.js'), 'utf8');
     const modulo = html.indexOf('<script src="./js/download-mapa.js"></script>');
-    assert.ok(modulo > 0 && modulo < html.indexOf('<script>'));
+    assert.ok(modulo > 0 && modulo < html.indexOf('<script src="./js/novo-app.js"></script>'));
     for (const id of ['offline-estado', 'offline-progresso', 'offline-detalhe',
         'offline-baixar', 'offline-cancelar']) {
         assert.match(html, new RegExp('id="' + id + '"'), id);
     }
-    assert.match(html, /DownloadMapa\.criar\(/);
+    assert.match(app, /DownloadMapa\.criar\(/);
 });

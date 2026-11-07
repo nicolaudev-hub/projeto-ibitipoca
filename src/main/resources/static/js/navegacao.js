@@ -9,7 +9,12 @@
  * - Detectar afastamento persistente da rota.
  *
  * Integração:
- * NavegacaoGPS.iniciar({ mapa, coordenadas, aoAtualizar })
+ * const nav = NavegacaoGPS.iniciar({ mapa, coordenadas, aoAtualizar });
+ * nav.definirRota(coordenadas | null); nav.pararDeSeguir(); nav.parar();
+ *
+ * "coordenadas" é opcional: sem rota, o módulo só acompanha a posição (que
+ * serve de origem para calcular uma rota); a distância até a rota e o
+ * alerta de desvio passam a valer quando uma rota é definida.
  */
 (function (global) {
     'use strict';
@@ -200,7 +205,7 @@
 
     function iniciar(configuracao) {
         const mapa = configuracao && configuracao.mapa;
-        const coordenadas = configuracao && configuracao.coordenadas;
+        let coordenadas = (configuracao && configuracao.coordenadas) || null;
         const aoAtualizar = configuracao &&
             typeof configuracao.aoAtualizar === 'function'
             ? configuracao.aoAtualizar
@@ -210,9 +215,12 @@
             throw new Error('É necessário fornecer o mapa Leaflet.');
         }
 
-        if (!Array.isArray(coordenadas) || coordenadas.length < 2) {
-            throw new Error('A rota precisa ter pelo menos duas coordenadas.');
+        function validarRota(rota) {
+            if (rota !== null && (!Array.isArray(rota) || rota.length < 2)) {
+                throw new Error('A rota precisa ter pelo menos duas coordenadas.');
+            }
         }
+        validarRota(coordenadas);
 
         if (!navigator.geolocation) {
             aoAtualizar({
@@ -220,7 +228,7 @@
                 mensagem: 'Este navegador não oferece suporte a GPS.'
             });
 
-            return { parar: function () {} };
+            return semGPS();
         }
 
         // Safari e Chrome só liberam o GPS em HTTPS ou localhost.
@@ -231,7 +239,16 @@
                     'endereço https:// (ou localhost no computador).'
             });
 
-            return { parar: function () {} };
+            return semGPS();
+        }
+
+        // Mesma interface, sem efeito, quando o GPS não está disponível.
+        function semGPS() {
+            return {
+                parar: function () {},
+                definirRota: rota => { validarRota(rota); },
+                pararDeSeguir: function () {}
+            };
         }
 
         let marcador = null;
@@ -240,7 +257,7 @@
         let ultimaPosicao = null;
         let seguindo = true;
         let encerrado = false;
-        const detector = criarDetectorDesvio();
+        let detector = criarDetectorDesvio();
 
         function emitir(dados) {
             try {
@@ -316,16 +333,17 @@
                 mapa.panTo(posicao);
             }
 
-            const distancia = menorDistanciaRota(
-                posicao,
-                coordenadas
-            );
+            // Sem rota definida não há distância nem desvio a avaliar.
+            const distancia = coordenadas
+                ? menorDistanciaRota(posicao, coordenadas)
+                : null;
 
-            const avaliacao = detector.avaliar(
-                distancia,
-                precisao,
-                resultado.timestamp
-            );
+            const avaliacao = coordenadas
+                ? detector.avaliar(distancia, precisao, resultado.timestamp)
+                : {
+                    foraDaRota: false,
+                    precisaoInsuficiente: !(precisao <= PRECISAO_MAXIMA_METROS)
+                };
             const foraDaRota = avaliacao.foraDaRota;
 
             let mensagem = foraDaRota
@@ -395,6 +413,18 @@
         );
 
         return {
+            // Troca a rota acompanhada (ou remove, com null); o histórico do
+            // detector de desvio recomeça, porque era de outra rota.
+            definirRota: function (novas) {
+                validarRota(novas);
+                coordenadas = novas;
+                detector = criarDetectorDesvio();
+            },
+
+            // Ex.: depois de enquadrar uma rota recém-calculada. O botão
+            // "Centralizar" retoma o acompanhamento.
+            pararDeSeguir: pararDeSeguir,
+
             parar: function () {
                 encerrado = true;
 

@@ -24,9 +24,10 @@ const { NavegacaoGPS } = carregar('navegacao.js');
 const lerJson = arquivo => JSON.parse(
     fs.readFileSync(arquivo, 'utf8').replace(/^﻿/, ''));
 
-const ROTA = lerJson(path.join(STATIC, 'data', 'rota_navegacao_offline.json')).routes[0];
+// Rota real Juiz de Fora → chalé (usada na viagem), guardada como exemplo de teste.
+const ROTA = lerJson(path.join(__dirname, 'fixtures', 'rota_jf_chale.json')).routes[0];
 const COORDENADAS = ROTA.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
-const ETAPAS = lerJson(path.join(STATIC, 'data', 'etapas_rota_principal.json'));
+const ETAPAS = lerJson(path.join(__dirname, 'fixtures', 'etapas_jf_chale.json'));
 const PREPARO = I.preparar(ETAPAS.etapas, COORDENADAS);
 
 // Ponto a s metros do início, ao longo da rota preparada.
@@ -75,14 +76,14 @@ const ALVO = PREPARO.manobras.findIndex((m, i) => i > 0 &&
 
 // ---- Dados ----
 
-test('dados: as etapas foram geradas para a rota principal atual', () => {
+test('dados: as etapas de exemplo foram geradas para a rota de exemplo', () => {
     assert.equal(ETAPAS.formato, 'ibitipoca-etapas-v1');
     assert.ok(Math.abs(ETAPAS.rota.distancia - ROTA.distance) <= 1);
     assert.match(ETAPAS.fonte.servico, /OSRM/);
     assert.ok(PREPARO.valido, PREPARO.motivo);
 });
 
-test('dados: toda manobra cai sobre a geometria da rota principal', () => {
+test('dados: toda manobra cai sobre a geometria da rota de exemplo', () => {
     for (const etapa of ETAPAS.etapas) {
         const ponto = [etapa.manobra.localizacao[1], etapa.manobra.localizacao[0]];
         const d = NavegacaoGPS.menorDistanciaRota(ponto, COORDENADAS);

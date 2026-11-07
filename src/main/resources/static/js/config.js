@@ -9,13 +9,12 @@ App.CONFIG = {
     centro: [-21.764227, -43.350427],
     zoomInicial: 10,
     tiles: "http://localhost:8081/styles/basic-preview/{z}/{x}/{y}.png",
-    arquivoRota: "./data/rota_navegacao_offline.json",
 };
 
 /* Estado compartilhado entre os módulos. */
 App.estado = {
     mapa: null,
-    pontos: [], // rota completa como [[lat,lng], ...]
+    pontos: [], // rota até o destino como [[lat,lng], ...] (vazia sem destino)
     stepEls: [], // elementos <li> das instruções
 };
 

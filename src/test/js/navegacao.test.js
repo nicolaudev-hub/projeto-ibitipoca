@@ -25,7 +25,7 @@ function carregarModulo(extras) {
 
 function carregarRota() {
     const texto = fs.readFileSync(
-        path.join(STATIC, 'data', 'rota_navegacao_offline.json'), 'utf8'
+        path.join(__dirname, 'fixtures', 'rota_jf_chale.json'), 'utf8'
     ).replace(/^﻿/, '');
     return JSON.parse(texto).routes[0].geometry.coordinates
         .map(([lon, lat]) => [lat, lon]);
@@ -279,4 +279,68 @@ test('iniciar: parar() remove camadas, controle e o watch', () => {
     assert.equal(amb.chamadas.removidos, 2);
     assert.equal(amb.chamadas.controleRemovido, true);
     assert.equal(amb.ouvintes.dragstart, undefined);
+});
+
+// ---- Sem rota fixa: a rota entra quando o destino é calculado ----
+
+test('iniciar sem rota: acompanha a posição sem distância nem desvio', () => {
+    const amb = criarAmbiente();
+    const estados = [];
+    amb.modulo.iniciar({ mapa: amb.mapa, aoAtualizar: d => estados.push(d) });
+    amb.enviar(-21.80, -43.50, 8, 1000);
+    amb.enviar(-21.81, -43.51, 8, 7000);
+    amb.enviar(-21.82, -43.52, 8, 14000);
+    const ultimo = estados.at(-1);
+    assert.equal(ultimo.estado, 'ativo');
+    assert.equal(ultimo.distanciaRotaMetros, null);
+    assert.equal(ultimo.foraDaRota, false);
+    assert.equal(ultimo.latitude, -21.82);
+});
+
+test('iniciar sem rota: precisão ruim é sinalizada', () => {
+    const amb = criarAmbiente();
+    const estados = [];
+    amb.modulo.iniciar({ mapa: amb.mapa, aoAtualizar: d => estados.push(d) });
+    amb.enviar(-21.80, -43.50, 400, 1000);
+    assert.equal(estados.at(-1).precisaoInsuficiente, true);
+});
+
+test('definirRota: passa a medir a distância e a detectar desvio; null remove', () => {
+    const amb = criarAmbiente();
+    const estados = [];
+    const nav = amb.modulo.iniciar({ mapa: amb.mapa, aoAtualizar: d => estados.push(d) });
+    nav.definirRota(ROTA_CURTA);
+    amb.enviar(-21.70, -43.895, 8, 1000);
+    assert.ok(estados.at(-1).distanciaRotaMetros < 5);
+
+    // Longe da rota por várias leituras e mais de 5 s: desvio confirmado.
+    for (let i = 1; i <= 4; i++) amb.enviar(-21.71, -43.895, 8, 1000 + i * 3000);
+    assert.equal(estados.at(-1).estado, 'desvio');
+
+    nav.definirRota(null);
+    amb.enviar(-21.71, -43.895, 8, 20000);
+    assert.equal(estados.at(-1).estado, 'ativo');
+    assert.equal(estados.at(-1).distanciaRotaMetros, null);
+
+    assert.throws(() => nav.definirRota([[-21.7, -43.9]]), /duas coordenadas/);
+});
+
+test('pararDeSeguir: o mapa deixa de acompanhar até Centralizar', () => {
+    const amb = criarAmbiente();
+    const nav = amb.modulo.iniciar({ mapa: amb.mapa });
+    amb.enviar(-21.70, -43.899, 8, 1000);
+    nav.pararDeSeguir();
+    amb.enviar(-21.70, -43.898, 8, 2000);
+    assert.equal(amb.chamadas.panTo.length, 0);
+    amb.clicarCentralizar();
+    amb.enviar(-21.70, -43.897, 8, 3000);
+    assert.equal(amb.chamadas.panTo.length, 1);
+});
+
+test('sem GPS no navegador: a interface de controle continua disponível', () => {
+    const amb = criarAmbiente({ isSecureContext: false });
+    const nav = amb.modulo.iniciar({ mapa: amb.mapa });
+    assert.doesNotThrow(() => nav.definirRota(ROTA_CURTA));
+    assert.doesNotThrow(() => nav.pararDeSeguir());
+    assert.doesNotThrow(() => nav.parar());
 });

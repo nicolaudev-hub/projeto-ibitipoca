@@ -3,8 +3,7 @@
  *
  * Estratégias:
  * - Navegação (página): rede primeiro, com limite de tempo; sem rede,
- *   usa a cópia guardada da própria página (index.html ou novo.html);
- *   sem essa cópia, usa a do index.html.
+ *   usa a cópia guardada do index.html.
  * - Demais recursos do app (Leaflet, JS, rota, manifesto): cache primeiro.
  * - Tiles (./tiles/{z}/{x}/{y}.png): cache primeiro, em cache separado.
  *   Tile ausente sem conexão responde 504; o Leaflet trata como falha
@@ -16,7 +15,7 @@
  */
 'use strict';
 
-const VERSAO_APP = '8';
+const VERSAO_APP = '9';
 const VERSAO_TILES = '5ca315088105b9b6';
 const PREFIXO_CACHE = 'ibitipoca-';
 const CACHE_APP = PREFIXO_CACHE + 'app-v' + VERSAO_APP + '-' + VERSAO_TILES;
@@ -29,24 +28,18 @@ const RECURSOS_APP = [
     './leaflet/leaflet.js',
     './leaflet/images/marker-icon.png',
     './leaflet/images/marker-shadow.png',
-    './js/navegacao.js',
-    './js/instrucoes.js',
-    './js/rota-parque.js',
-    './js/circuito-aguas.js',
-    './js/registro-sw.js',
-    './js/download-mapa.js',
-    './data/rota_navegacao_offline.json',
-    './data/etapas_rota_principal.json',
-    './data/circuito_aguas.json',
-    './tiles/manifesto.json',
-    // Página de testes do visual novo e seus arquivos.
-    './novo.html',
     './css/tokens.css',
     './css/base.css',
     './css/sidebar.css',
     './css/components.css',
     './css/map.css',
     './css/navegacao-novo.css',
+    './js/navegacao.js',
+    './js/instrucoes.js',
+    './js/rota-destino.js',
+    './js/busca-destino.js',
+    './js/registro-sw.js',
+    './js/download-mapa.js',
     './js/config.js',
     './js/util.js',
     './js/map.js',
@@ -54,18 +47,15 @@ const RECURSOS_APP = [
     './js/theme.js',
     './js/sidebar.js',
     './js/novo-app.js',
-    './js/rota-destino.js',
-    './js/busca-destino.js'
+    './tiles/manifesto.json'
 ];
 
 const BASE = new URL('./', self.location).pathname;
 const URL_PAGINA = new URL('./index.html', self.location).href;
-const URL_PAGINA_NOVA = new URL('./novo.html', self.location).href;
 
-// Cópia guardada correspondente a cada página; outros caminhos não têm.
+// Cópia guardada correspondente à página; outros caminhos não têm.
 function chavePagina(url) {
     if (url.pathname === BASE || url.pathname === BASE + 'index.html') return URL_PAGINA;
-    if (url.pathname === BASE + 'novo.html') return URL_PAGINA_NOVA;
     return null;
 }
 

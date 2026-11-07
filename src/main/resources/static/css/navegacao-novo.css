@@ -1,6 +1,6 @@
 /* ============================================================
    navegacao-novo.css — painéis de navegação no visual novo
-   (instruções, rota do parque, mapa offline, alerta de GPS).
+   (instruções, destino, mapa offline, alerta de GPS).
    Usa apenas os tokens de tokens.css; não altera os demais CSS.
    ============================================================ */
 
@@ -32,7 +32,6 @@
     border-left: 4px solid var(--route);
 }
 
-.painel-instrucoes.parque { border-left-color: #e8590c; }
 .painel-instrucoes.alerta { box-shadow: inset 0 0 0 2px var(--warn); }
 
 .instr-icone {
@@ -81,7 +80,7 @@
 }
 .stat.alerta .stat__value { color: var(--danger); }
 
-/* Painéis da barra lateral (parque e mapa offline). */
+/* Painéis da barra lateral (destino e mapa offline). */
 .painel {
     display: flex;
     flex-direction: column;
@@ -108,33 +107,9 @@
 .painel .problema { color: var(--danger); }
 .painel .completo { color: var(--ok); }
 
-.opcoes-parque { display: flex; gap: 8px; margin-top: 8px; }
-
-.opcoes-parque label {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 10px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-}
-
-.opcoes-parque label:has(input:checked) {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    color: var(--accent);
-}
-
-.opcoes-parque input { margin: 0; accent-color: var(--accent); }
 .painel .btn:disabled { opacity: 0.6; cursor: default; }
 #offline-progresso { width: 100%; height: 12px; accent-color: var(--accent); }
-#parque-estado, #offline-estado, #destino-estado { font-weight: 600; }
+#offline-estado, #destino-estado { font-weight: 600; }
 
 /* ---------- Destino livre ---------- */
 .painel-instrucoes.destino { border-left-color: #1c7ed6; }

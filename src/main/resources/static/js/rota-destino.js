@@ -9,8 +9,8 @@
  * - Guardar a última rota calculada (geometria, etapas e destino) no
  *   aparelho, para continuar disponível sem internet.
  *
- * Generaliza a lógica de rota-parque.js para qualquer destino da região
- * coberta pelas rotas (Sudeste). Como lá: nunca desenha linha reta no lugar
+ * Nasceu da antiga "rota do parque", generalizada para qualquer destino da
+ * região coberta pelas rotas (Sudeste). Nunca desenha linha reta no lugar
  * de uma rota viária e só consulta o serviço quando calcular() é chamado.
  *
  * Integração:
@@ -28,8 +28,8 @@
     const IDADE_MAXIMA_POSICAO_MS = 30000;
     const PRECISAO_MAXIMA_METROS = 100;
     // Distâncias máximas até a via mais próxima aceitas pelo OSRM. O destino
-    // tem margem maior que a da portaria do parque: um ponto tocado no mapa ou
-    // o centro de uma cidade raramente cai exatamente sobre uma rua.
+    // tem margem maior que a origem: um ponto tocado no mapa ou o centro de
+    // uma cidade raramente cai exatamente sobre uma rua.
     const AFASTAMENTO_MAXIMO_ORIGEM_METROS = 500;
     const AFASTAMENTO_MAXIMO_DESTINO_METROS = 2000;
     const AFASTAMENTO_AVISO_DESTINO_METROS = 150;

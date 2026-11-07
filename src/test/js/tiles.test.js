@@ -70,10 +70,10 @@ test('cobertura: manifesto contém a grade completa da área em todos os zooms',
     }
 });
 
-test('cobertura: a rota inteira está dentro da área dos tiles', () => {
+test('cobertura: a rota de exemplo (Juiz de Fora → chalé) está dentro da área dos tiles', () => {
     const [oeste, sul, leste, norte] = manifesto.limites;
     const texto = fs.readFileSync(
-        path.join(STATIC, 'data', 'rota_navegacao_offline.json'), 'utf8'
+        path.join(__dirname, 'fixtures', 'rota_jf_chale.json'), 'utf8'
     ).replace(/^﻿/, '');
     const fora = JSON.parse(texto).routes[0].geometry.coordinates
         .filter(([lon, lat]) => lon < oeste || lon > leste || lat < sul || lat > norte);
@@ -108,13 +108,13 @@ test('Leaflet: nenhum zoom de 1 a 17 pede tile ausente', () => {
     }
 });
 
-test('index.html: usa os tiles locais e não depende do config.json', () => {
-    const html = fs.readFileSync(path.join(STATIC, 'index.html'), 'utf8');
-    assert.match(html, /'\.\/tiles\/manifesto\.json'/);
-    assert.match(html, /'\.\/tiles\/\{z\}\/\{x\}\/\{y\}\.png'/);
-    assert.match(html, /minZoom: 1,/);
-    assert.match(html, /bounds: cobertura/);
-    assert.doesNotMatch(html, /config\.json/);
+test('interface: usa os tiles locais e não depende do config.json', () => {
+    const app = fs.readFileSync(path.join(STATIC, 'js', 'novo-app.js'), 'utf8');
+    assert.match(app, /'\.\/tiles\/manifesto\.json'/);
+    assert.match(app, /'\.\/tiles\/\{z\}\/\{x\}\/\{y\}\.png'/);
+    assert.match(app, /minZoom: 1,/);
+    assert.match(app, /bounds: cobertura/);
+    assert.doesNotMatch(app, /config\.json/);
 });
 
 // Sobe o ServidorWeb compilado (mvn verify) e confere a entrega real.

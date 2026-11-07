@@ -172,7 +172,7 @@ test('servidor Java: busca com o Nominatim fora do ar responde 502',
             assert.equal(r.status, 502);
             assert.equal((await r.json()).code, 'SearchError');
             // As páginas continuam sendo entregues normalmente.
-            const pagina = await fetch(web.base + '/novo.html');
+            const pagina = await fetch(web.base + '/index.html');
             assert.equal(pagina.status, 200);
             await pagina.arrayBuffer();
         } finally {
