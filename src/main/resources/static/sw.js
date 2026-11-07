@@ -16,7 +16,7 @@
  */
 'use strict';
 
-const VERSAO_APP = '7';
+const VERSAO_APP = '8';
 const VERSAO_TILES = '5ca315088105b9b6';
 const PREFIXO_CACHE = 'ibitipoca-';
 const CACHE_APP = PREFIXO_CACHE + 'app-v' + VERSAO_APP + '-' + VERSAO_TILES;
@@ -53,7 +53,9 @@ const RECURSOS_APP = [
     './js/simulation.js',
     './js/theme.js',
     './js/sidebar.js',
-    './js/novo-app.js'
+    './js/novo-app.js',
+    './js/rota-destino.js',
+    './js/busca-destino.js'
 ];
 
 const BASE = new URL('./', self.location).pathname;
@@ -98,6 +100,9 @@ self.addEventListener('fetch', evento => {
     if (url.origin !== self.location.origin) return;
     // Rotas do OSRM são calculadas na hora: nunca guardar nem servir do cache.
     if (url.pathname.startsWith(BASE + 'osrm/')) return;
+    // Buscas de destino: o servidor já guarda em cache; aqui seriam
+    // respostas velhas guardadas para sempre.
+    if (url.pathname.startsWith(BASE + 'api/')) return;
     if (requisicao.mode === 'navigate') {
         evento.respondWith(redePrimeiro(evento, url));
     } else if (url.pathname.startsWith(BASE + 'tiles/') && url.pathname.endsWith('.png')) {

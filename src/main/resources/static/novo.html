@@ -92,6 +92,39 @@
             </button>
         </div>
 
+        <section class="painel" aria-labelledby="titulo-destino">
+            <h2 class="painel__titulo" id="titulo-destino">Para onde vamos?</h2>
+            <form id="destino-busca" class="destino-busca" role="search">
+                <label for="destino-texto">Buscar destino na região Sudeste</label>
+                <div class="destino-busca__linha">
+                    <input id="destino-texto" type="search" autocomplete="off"
+                           minlength="3" maxlength="120" required
+                           placeholder="Cidade, endereço ou lugar">
+                    <button class="btn" type="submit" id="destino-buscar">Buscar</button>
+                </div>
+            </form>
+            <p id="destino-busca-estado" aria-live="polite"></p>
+            <ul id="destino-resultados" class="destino-resultados" hidden></ul>
+            <button type="button" class="btn destino-mapa" id="destino-mapa" aria-pressed="false">
+                Escolher no mapa
+            </button>
+            <p id="destino-estado" aria-live="polite"></p>
+            <p id="destino-detalhe" class="note"></p>
+            <div class="destino-acoes">
+                <button type="button" class="btn" id="destino-calcular" hidden>
+                    Calcular rota
+                </button>
+                <button type="button" class="btn" id="destino-limpar" hidden>
+                    Limpar destino
+                </button>
+            </div>
+            <p class="note">
+                A rota parte da sua posição atual (GPS) e aparece em azul. O cálculo
+                exige internet; a última rota fica salva neste aparelho e aparece sem
+                internet. Busca: dados © colaboradores do OpenStreetMap (Nominatim).
+            </p>
+        </section>
+
         <section class="painel" aria-label="Rota até o parque">
             <fieldset>
                 <legend>Deseja adicionar a rota até o parque?</legend>
@@ -181,6 +214,8 @@
 <script src="./js/instrucoes.js"></script>
 <script src="./js/rota-parque.js"></script>
 <script src="./js/circuito-aguas.js"></script>
+<script src="./js/rota-destino.js"></script>
+<script src="./js/busca-destino.js"></script>
 <script src="./js/registro-sw.js"></script>
 <script src="./js/download-mapa.js"></script>
 <!-- Visual novo: só os módulos que não criam mapa nem GPS -->

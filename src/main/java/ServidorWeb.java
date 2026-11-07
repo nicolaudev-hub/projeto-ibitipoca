@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Executors;
 
 public class ServidorWeb {
 
@@ -19,7 +20,12 @@ public class ServidorWeb {
         );
 
         servidor.createContext("/config.json", ServidorWeb::atenderConfiguracao);
+        servidor.createContext("/osrm/", ProxyOsrm.doAmbiente()::atender);
+        servidor.createContext("/api/buscar", BuscaNominatim.doAmbiente()::atender);
         servidor.createContext("/", ServidorWeb::atenderRequisicao);
+        // Uma thread virtual por requisição: uma rota ou busca esperando o
+        // serviço externo não trava a entrega das páginas e dos tiles.
+        servidor.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         servidor.start();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> servidor.stop(1)));
 

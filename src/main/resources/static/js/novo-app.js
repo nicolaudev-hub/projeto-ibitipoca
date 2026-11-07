@@ -265,12 +265,30 @@
     let acompanhadorParque = null;
     let preparoParque = null;
     let rotaDoAcompanhadorParque = null;
+    let acompanhadorDestino = null;
+    let preparoDestino = null;
+    let rotaDoAcompanhadorDestino = null;
     let motivoSemInstrucoes = 'Carregando instruções...';
     let preparoDaLista = null;
     let indiceDestacado = -1;
 
+    // Prioridade das instruções: destino escolhido > parque > rota principal.
     function acompanhadorAtivo() {
-        return acompanhadorParque || acompanhadorPrincipal;
+        return acompanhadorDestino || acompanhadorParque || acompanhadorPrincipal;
+    }
+
+    function preparoAtivo() {
+        if (acompanhadorDestino) return preparoDestino;
+        return acompanhadorParque ? preparoParque : preparoPrincipal;
+    }
+
+    function tituloInstrucoes() {
+        if (acompanhadorDestino) {
+            return 'Instruções até ' + rotaDoAcompanhadorDestino.destino.nome;
+        }
+        return acompanhadorParque
+            ? 'Instruções até a portaria do parque'
+            : 'Instruções até o chalé';
     }
 
     function maiuscula(texto) {
@@ -279,7 +297,7 @@
 
     // Lista das manobras da rota ativa; tocar numa delas mostra o ponto.
     function montarLista() {
-        const preparo = acompanhadorParque ? preparoParque : preparoPrincipal;
+        const preparo = preparoAtivo();
         if (preparo === preparoDaLista) return;
         preparoDaLista = preparo;
         indiceDestacado = -1;
@@ -291,9 +309,7 @@
             return;
         }
 
-        stepsTitulo.textContent = acompanhadorParque
-            ? 'Instruções até a portaria do parque'
-            : 'Instruções até o chalé';
+        stepsTitulo.textContent = tituloInstrucoes();
 
         preparo.manobras.forEach((manobra, i) => {
             const [lon, lat] = manobra.etapa.manobra.localizacao;
@@ -353,11 +369,10 @@
     }
 
     function mostrarInstrucoes(r) {
-        const parque = acompanhadorParque !== null;
-        painelInstrucoes.classList.toggle('parque', parque);
-        instrDestino.textContent = parque
-            ? 'Instruções até a portaria do parque'
-            : 'Instruções até o chalé';
+        painelInstrucoes.classList.toggle('destino', acompanhadorDestino !== null);
+        painelInstrucoes.classList.toggle('parque',
+            acompanhadorDestino === null && acompanhadorParque !== null);
+        instrDestino.textContent = tituloInstrucoes();
         montarLista();
 
         if (!r) {
@@ -517,6 +532,142 @@
 
     parqueCalcular.addEventListener('click', () => {
         if (rotaParque) rotaParque.calcular();
+    });
+
+    // ---- Destino livre: rota da posição atual até o destino escolhido ----
+    const formBusca = $('destino-busca');
+    const campoBusca = $('destino-texto');
+    const botaoBuscar = $('destino-buscar');
+    const buscaEstado = $('destino-busca-estado');
+    const listaResultados = $('destino-resultados');
+    const botaoEscolherNoMapa = $('destino-mapa');
+    const destinoEstado = $('destino-estado');
+    const destinoDetalhe = $('destino-detalhe');
+    const destinoCalcular = $('destino-calcular');
+    const destinoLimpar = $('destino-limpar');
+
+    function mostrarDestino(e) {
+        const problema = ['erro', 'sem-rede', 'aguardando-gps', 'fora-da-cobertura']
+            .includes(e.estado);
+        destinoEstado.classList.toggle('problema', problema);
+        destinoEstado.textContent = e.mensagem;
+        destinoDetalhe.textContent = e.rota
+            ? descreverRotaParque(e.rota, e.estado === 'pronta' && e.recalculadaAgora)
+            : '';
+        destinoCalcular.hidden = !e.destino;
+        destinoCalcular.disabled = e.estado === 'calculando';
+        destinoCalcular.textContent = e.rota ? 'Recalcular rota' : 'Calcular rota';
+        destinoLimpar.hidden = !e.destino;
+
+        // As instruções seguem a rota do destino enquanto ela existir.
+        const rota = e.rota || null;
+        if (rota !== rotaDoAcompanhadorDestino) {
+            rotaDoAcompanhadorDestino = rota;
+            acompanhadorDestino = null;
+            preparoDestino = null;
+            if (rota) {
+                const coordenadasDestino = rota.coordenadas.map(([lon, lat]) => [lat, lon]);
+                preparoDestino = window.InstrucoesNavegacao.preparar(rota.etapas, coordenadasDestino);
+                acompanhadorDestino = window.InstrucoesNavegacao.criarAcompanhador(preparoDestino);
+            }
+            alimentarInstrucoes();
+        }
+    }
+
+    let rotaDestino = null;
+    let buscaDestino = null;
+    try {
+        rotaDestino = window.RotaDestino.criar({
+            mapa: mapa,
+            obterPosicao: () => ultimaLeituraGPS && {
+                latitude: ultimaLeituraGPS.latitude,
+                longitude: ultimaLeituraGPS.longitude,
+                precisao: ultimaLeituraGPS.precisao,
+                timestamp: ultimaLeituraGPS.recebidaEm
+            },
+            aoMudar: mostrarDestino
+        });
+        buscaDestino = window.BuscaDestino.criar();
+        // Sem internet, a última rota calculada continua disponível.
+        rotaDestino.restaurar();
+    } catch (erroDestino) {
+        console.error('Escolha de destino indisponível:', erroDestino);
+        destinoEstado.textContent = 'Escolha de destino indisponível nesta página.';
+    }
+
+    function escolherDestino(destino) {
+        if (!rotaDestino) return;
+        listaResultados.hidden = true;
+        listaResultados.textContent = '';
+        buscaEstado.textContent = '';
+        rotaDestino.definirDestino(destino);
+    }
+
+    function mostrarResultados(r) {
+        buscaEstado.textContent = r.mensagem;
+        buscaEstado.classList.toggle('problema', r.estado === 'erro' || r.estado === 'sem-rede');
+        listaResultados.textContent = '';
+        r.resultados.forEach(resultado => {
+            const item = document.createElement('li');
+            const botao = document.createElement('button');
+            botao.type = 'button';
+            botao.className = 'destino-resultado';
+            const nome = document.createElement('span');
+            nome.className = 'destino-resultado__nome';
+            nome.textContent = resultado.nome;
+            const descricao = document.createElement('span');
+            descricao.className = 'destino-resultado__descricao';
+            descricao.textContent = resultado.descricao;
+            botao.append(nome, descricao);
+            botao.addEventListener('click', () => escolherDestino(resultado));
+            item.appendChild(botao);
+            listaResultados.appendChild(item);
+        });
+        listaResultados.hidden = r.resultados.length === 0;
+    }
+
+    formBusca.addEventListener('submit', evento => {
+        evento.preventDefault();
+        if (!buscaDestino) return;
+        botaoBuscar.disabled = true;
+        buscaEstado.classList.remove('problema');
+        buscaEstado.textContent = 'Buscando...';
+        buscaDestino.buscar(campoBusca.value)
+            .then(mostrarResultados)
+            .finally(() => { botaoBuscar.disabled = false; });
+    });
+
+    // "Escolher no mapa": o próximo toque no mapa define o destino.
+    let escolhendoNoMapa = false;
+    function definirModoMapa(ligado) {
+        escolhendoNoMapa = ligado;
+        botaoEscolherNoMapa.setAttribute('aria-pressed', String(ligado));
+        botaoEscolherNoMapa.classList.toggle('btn--active', ligado);
+        botaoEscolherNoMapa.textContent = ligado
+            ? 'Toque no mapa para marcar o destino (cancelar)'
+            : 'Escolher no mapa';
+        document.body.classList.toggle('escolhendo-destino', ligado);
+    }
+
+    botaoEscolherNoMapa.addEventListener('click', () => definirModoMapa(!escolhendoNoMapa));
+
+    mapa.on('click', evento => {
+        if (!escolhendoNoMapa) return;
+        definirModoMapa(false);
+        escolherDestino({
+            latitude: evento.latlng.lat,
+            longitude: evento.latlng.lng,
+            nome: 'Ponto escolhido no mapa'
+        });
+    });
+
+    destinoCalcular.addEventListener('click', () => {
+        if (rotaDestino) rotaDestino.calcular();
+    });
+
+    destinoLimpar.addEventListener('click', () => {
+        if (rotaDestino) rotaDestino.limpar();
+        definirModoMapa(false);
     });
 
     // ---- Circuito das Águas (opcional) ----
